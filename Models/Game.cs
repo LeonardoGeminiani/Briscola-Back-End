@@ -21,15 +21,27 @@ public class Game
     public DateTime Date { get; private set; }
     public bool Socked { get; private set; }
     private BriscolaMode gameMode;
-    private Player[] players;
+    private Player?[] players;
+    private Difficulty difficulty;
+    private int userNumber;
     
-    public Game(byte playerNumber, BriscolaMode mode)
+    public Game(Settings settings)
     {
-        if (playerNumber < 1 || playerNumber > 4) 
-            throw new ArgumentException($"{nameof(playerNumber)}, not valid");
+        if (settings.userNumber < 1 || 
+            settings.userNumber > 4 || 
+            (int)settings.briscolaMode < settings.userNumber) 
+            throw new ArgumentException($"{nameof(settings.userNumber)}, not valid");
         
         Date = DateTime.Now;
-        players = new Player[playerNumber];
-        gameMode = mode;
+        gameMode = settings.briscolaMode;
+        players = new Player[(int)gameMode];
+        difficulty = settings.difficulty;
+        userNumber = settings.userNumber;
+        
+        // create bots
+        for (int i = 0; i < ((int)gameMode - userNumber); i++)
+        {
+            players[i] = new Player($"bot {i}", PlayerModes.Ai);
+        }
     }
 }

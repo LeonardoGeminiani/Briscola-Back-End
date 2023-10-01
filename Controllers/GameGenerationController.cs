@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Briscola_Back_End.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,21 +21,34 @@ public class GameGenerationController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet("/CreateGame")]
-    public IActionResult CreateGame()
+    [HttpPost("/CreateGame")]
+    public IActionResult CreateGame([FromBody] string settingsJson)
     {
-        // Console.WriteLine();
-        // foreach (var game in GameIds)
+        // settingsJson -> 
         // {
-        //     Console.WriteLine($"{game.Date} {game.Status}");
+        //     "briscolaMode": 2,
+        //     "userNumber": 2,
+        //      "difficulty": 1
         // }
+
 
         for (uint i = 0; i < GameIds.Length; ++i)
         {
             if (GameIds[i] is null)
             {
-                GameIds[i] = new Game(/* pass game settings */);
-                // GameIds[i].Date = DateTime.Now;
+                try
+                {
+                    
+                    var sett = JsonSerializer.Deserialize<Settings>(settingsJson);
+                    if (sett is null)
+                        return StatusCode(StatusCodes.Status500InternalServerError, "settings are required");
+                    GameIds[i] = new Game(sett);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, $"not valid settings: \"{ex.Message}\"");
+                }
+
                 return Ok((i + StartGameId).ToString());
             }
         }
