@@ -46,7 +46,9 @@ public class Card
         };
     }
 
-    public static string GetCardFamily(byte value){
+    public int GetCardNumber() => this.value;
+    public CardFamilies GetCardFamily() => this.family;
+    public static string GetCardName(byte value){
         return value switch
         {
             1 => "Asso",
@@ -57,6 +59,6 @@ public class Card
         };
     }
     override public string ToString() {
-        return Card.GetCardFamily(this.value) + " di " + this.family.ToString();
+        return Card.GetCardName(this.value) + " di " + this.family.ToString();
     }
 }

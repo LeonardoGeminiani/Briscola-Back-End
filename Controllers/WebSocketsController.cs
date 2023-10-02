@@ -53,8 +53,85 @@ public class WebSocketsController : ControllerBase
         return msg;
     }
 
-    private async Task Echo(WebSocket webSocket, Game game, int id)
+    private async Task Echo(WebSocket webSocket, Game game, int gameId)
     {
+        // get player info...
+        
+        // add player
+        
+        int playerId = game.AddPlayer(new Player("",PlayerModes.User,
+            (ref Player player) =>
+            {
+                 
+                
+            },
+            (Stack<Card> mazzo, int cards, ref Player player) =>
+            {
+                var buffer = new byte[1024 * 4];
+                
+                var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
+                    new {
+                        Status = "pick",
+                        CardsNumber = cards
+                    }
+                )); // u8 for utf-8
+                
+                var t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
+                    WebSocketMessageType.Text, true, CancellationToken.None);
+                t.Start();
+                t.Wait();
+                
+                _logger.Log(LogLevel.Information, "Message sent to Client");
+
+                string msg;
+                WebSocketReceiveResult result;
+                
+                do
+                {
+                    var tr = webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    _logger.Log(LogLevel.Information, "Message received from Client");
+                    tr.Start();
+                    tr.Wait();
+                    result = tr.Result;
+
+                    if (result.CloseStatus.HasValue)
+                    {
+                        // socket crash
+                        throw new Exception("Client crash");
+                    }
+
+                    msg = BufferToString(buffer);
+                 } while (msg.Trim() != "picked");
+                
+                /* Card Logic */
+                object[] picked = new object[cards];
+                for (int i = 0; i < cards; i++)
+                {
+                    Card c = mazzo.Pop();
+                    player.Cards.Add(c);
+
+                    picked[i] = new
+                    {
+                        Family = (int)c.GetCardFamily(),
+                        Number = c.GetCardNumber()
+                    };
+                }
+
+                serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
+                    new {
+                        Cards = picked
+                    }
+                ));
+                
+                t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
+                    WebSocketMessageType.Text, result.EndOfMessage, CancellationToken.None);
+                t.Start();
+                t.Wait();
+                
+                _logger.Log(LogLevel.Information, "Message sent to Client");
+            }
+        ));
+        
         var buffer = new byte[1024 * 4];
         
         var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
