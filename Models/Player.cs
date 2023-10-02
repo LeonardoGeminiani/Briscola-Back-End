@@ -7,12 +7,15 @@ public enum PlayerModes
     UserDisconnected // Ai
 }
 
+public delegate Card DropCard(ref Player player);
+public delegate void PickCards(Stack<Card> mazzo, int nCards, ref Player player);
+
 public class Player
 {
-    public PlayerModes Mode { get; private set; }
+    public PlayerModes Mode { get; set; }
     public string Name {get; private set; }
     
-    public Player(string name, PlayerModes mode ,Func<Card, Player> selectDropCard, Action<Stack<Card>, int, Player> pickCards)
+    public Player(string name, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards)
     {
         Mode = mode;
         Name = name;
@@ -34,8 +37,8 @@ public class Player
         return ret;
     }
 
-    public Func<Card, Player> SelectDropCard;
+    public DropCard SelectDropCard;
     
     // (Stack<Card> Mazzo, int Ncards, ...)
-    public Action<Stack<Card>, int, Player> PickCards;
+    public PickCards PickCards;
 }
