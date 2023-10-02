@@ -7,20 +7,20 @@ public enum PlayerModes
     UserDisconnected // Ai
 }
 
-public delegate Card DropCard(ref Player player);
-public delegate void PickCards(Stack<Card> mazzo, int nCards, ref Player player);
+// public delegate Card DropCard(ref Player player);
+// public delegate void PickCards(Stack<Card> mazzo, int nCards, ref Player player);
 
 public class Player
 {
-    public PlayerModes Mode { get; set; }
+    // public PlayerModes Mode { get; set; }
     public string Name {get; private set; }
     
-    public Player(string name, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards)
+    public Player(string name /*, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards*/)
     {
-        Mode = mode;
+        // Mode = mode;
         Name = name;
-        SelectDropCard = selectDropCard;
-        PickCards = pickCards;
+        // SelectDropCard = selectDropCard;
+        // PickCards = pickCards;
     }
     
     public byte PointsInGame = 0;
@@ -37,8 +37,8 @@ public class Player
         return ret;
     }
 
-    public DropCard SelectDropCard;
-    
-    // (Stack<Card> Mazzo, int Ncards, ...)
-    public PickCards PickCards;
+    // public DropCard SelectDropCard;
+    //
+    // // (Stack<Card> Mazzo, int Ncards, ...)
+    // public PickCards PickCards;
 }
