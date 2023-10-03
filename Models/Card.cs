@@ -58,6 +58,17 @@ public class Card
             _ => value.ToString(),
         };
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is DTOCard d)
+        {
+            return d.Family == family && d.Number == this.value;
+        }
+        
+        return base.Equals(obj);
+    }
+
     override public string ToString() {
         return Card.GetCardName(this.value) + " di " + this.family.ToString();
     }

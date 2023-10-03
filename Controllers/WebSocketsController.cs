@@ -59,11 +59,59 @@ public class WebSocketsController : ControllerBase
         
         // add player
         
-        int playerId = game.AddPlayer(new Player("",PlayerModes.User,
+        int playerId = game.AddPlayer(new Player("",webSocket,
             (ref Player player) =>
             {
-                 
+                var buffer = new byte[1024 * 4];
                 
+                var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
+                    new {
+                        Status = "drop",
+                    }
+                )); // u8 for utf-8
+                
+                var t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
+                    WebSocketMessageType.Text, true, CancellationToken.None);
+                t.Start();
+                t.Wait();
+                
+                _logger.Log(LogLevel.Information, "Message sent to Client");
+
+                DTOCard? msg;
+                WebSocketReceiveResult result;
+                
+                do
+                {
+                    var tr = webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    _logger.Log(LogLevel.Information, "Message received from Client");
+                    tr.Start();
+                    tr.Wait();
+                    result = tr.Result;
+
+                    if (result.CloseStatus.HasValue)
+                    {
+                        // socket crash
+                        throw new Exception("Client crash");
+                    }
+                    
+                    msg = JsonSerializer.Deserialize<DTOCard>(BufferToString(buffer));
+                } while (msg is null);
+
+                int i = -1;
+                foreach (var playerCard in player.Cards)
+                {
+                    i++;
+                    if (playerCard.Equals(msg))
+                    {
+                        break;
+                    }
+                }
+
+                if (i == -1) throw new Exception("Not Valid Card");
+                
+                Card ret = player.Cards.ElementAt(i);
+                player.Cards.RemoveAt(i);
+                return ret;
             },
             (Stack<Card> mazzo, int cards, ref Player player) =>
             {
@@ -101,7 +149,7 @@ public class WebSocketsController : ControllerBase
                     }
 
                     msg = BufferToString(buffer);
-                 } while (msg.Trim() != "picked");
+                } while (msg.Trim() != "picked");
                 
                 /* Card Logic */
                 object[] picked = new object[cards];
@@ -110,9 +158,9 @@ public class WebSocketsController : ControllerBase
                     Card c = mazzo.Pop();
                     player.Cards.Add(c);
 
-                    picked[i] = new
+                    picked[i] = new DTOCard()
                     {
-                        Family = (int)c.GetCardFamily(),
+                        Family = c.GetCardFamily(),
                         Number = c.GetCardNumber()
                     };
                 }
@@ -132,39 +180,5 @@ public class WebSocketsController : ControllerBase
             }
         ));
         
-        var buffer = new byte[1024 * 4];
-        
-        var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        _logger.Log(LogLevel.Information, "Message received from Client");
-
-        while (!result.CloseStatus.HasValue)
-        {
-            // var serverMsg = Encoding.UTF8.GetBytes($"Server: Hello. You said: {BufferToString(buffer)}");
-            var serverMsg = Encoding.UTF8.GetBytes(BufferToString(buffer));
-            await webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length), 
-                result.MessageType, result.EndOfMessage, CancellationToken.None);
-            _logger.Log(LogLevel.Information, "Message sent to Client");
-            
-            buffer = new byte[1024 * 4];
-            result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            
-            _logger.Log(LogLevel.Information, "Message received from Client");
-
-            var msg = BufferToString(buffer);
-
-            try
-            {
-                // JsonSerializer.Deserialize works only with propriety no with fields 
-                var p = JsonSerializer.Deserialize<Player>(msg); // to convert json string in to object; webSocket.send(JSON.stringify(obj))
-                _logger.Log(LogLevel.Information, $"msg: {msg}, Player {p}");
-            }
-            catch
-            {
-                _logger.Log(LogLevel.Error, $"Fail, {msg}");
-            }
-            
-        }
-        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-        _logger.Log(LogLevel.Information, "WebSocket connection closed");
     }
 }

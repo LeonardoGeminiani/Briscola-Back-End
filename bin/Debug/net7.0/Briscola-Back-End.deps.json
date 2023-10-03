@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "Briscola-Back-End/1.0.0": {
+        "runtime": {
+          "Briscola-Back-End.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Briscola-Back-End/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -1,3 +1,5 @@
+using System.Net.WebSockets;
+
 namespace Briscola_Back_End.Models;
 
 public enum PlayerModes
@@ -14,6 +16,8 @@ public class Player
 {
     public PlayerModes Mode { get; set; }
     public string Name {get; private set; }
+
+    public WebSocket WebSocket = null;
     
     public Player(string name, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards)
     {
@@ -21,6 +25,11 @@ public class Player
         Name = name;
         SelectDropCard = selectDropCard;
         PickCards = pickCards;
+    }
+
+    public Player(string name, WebSocket webSocket ,DropCard selectDropCard, PickCards pickCards) : this(name, PlayerModes.User, selectDropCard, pickCards)
+    {
+        this.WebSocket = webSocket;
     }
     
     public byte PointsInGame = 0;
@@ -35,6 +44,11 @@ public class Player
             ret += c.Value;
         }
         return ret;
+    }
+
+    public static void OnEvent(WebSocket webSocket, string msg)
+    {
+        
     }
 
     public DropCard SelectDropCard;
