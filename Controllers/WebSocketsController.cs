@@ -41,7 +41,7 @@ public class WebSocketsController : ControllerBase
         }
     }
 
-    private string BufferToString(byte[] buffer)
+    public static string BufferToString(byte[] buffer)
     {
         var msg = "";
         for (var i = 0; i < buffer.Length; i++)
@@ -59,126 +59,7 @@ public class WebSocketsController : ControllerBase
         
         // add player
         
-        int playerId = game.AddPlayer(new Player("",webSocket,
-            (ref Player player) =>
-            {
-                var buffer = new byte[1024 * 4];
-                
-                var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-                    new {
-                        Status = "drop",
-                    }
-                )); // u8 for utf-8
-                
-                var t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-                    WebSocketMessageType.Text, true, CancellationToken.None);
-                t.Start();
-                t.Wait();
-                
-                _logger.Log(LogLevel.Information, "Message sent to Client");
-
-                DTOCard? msg;
-                WebSocketReceiveResult result;
-                
-                do
-                {
-                    var tr = webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    _logger.Log(LogLevel.Information, "Message received from Client");
-                    tr.Start();
-                    tr.Wait();
-                    result = tr.Result;
-
-                    if (result.CloseStatus.HasValue)
-                    {
-                        // socket crash
-                        throw new Exception("Client crash");
-                    }
-                    
-                    msg = JsonSerializer.Deserialize<DTOCard>(BufferToString(buffer));
-                } while (msg is null);
-
-                int i = -1;
-                foreach (var playerCard in player.Cards)
-                {
-                    i++;
-                    if (playerCard.Equals(msg))
-                    {
-                        break;
-                    }
-                }
-
-                if (i == -1) throw new Exception("Not Valid Card");
-                
-                Card ret = player.Cards.ElementAt(i);
-                player.Cards.RemoveAt(i);
-                return ret;
-            },
-            (Stack<Card> mazzo, int cards, ref Player player) =>
-            {
-                var buffer = new byte[1024 * 4];
-                
-                var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-                    new {
-                        Status = "pick",
-                        CardsNumber = cards
-                    }
-                )); // u8 for utf-8
-                
-                var t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-                    WebSocketMessageType.Text, true, CancellationToken.None);
-                t.Start();
-                t.Wait();
-                
-                _logger.Log(LogLevel.Information, "Message sent to Client");
-
-                string msg;
-                WebSocketReceiveResult result;
-                
-                do
-                {
-                    var tr = webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    _logger.Log(LogLevel.Information, "Message received from Client");
-                    tr.Start();
-                    tr.Wait();
-                    result = tr.Result;
-
-                    if (result.CloseStatus.HasValue)
-                    {
-                        // socket crash
-                        throw new Exception("Client crash");
-                    }
-
-                    msg = BufferToString(buffer);
-                } while (msg.Trim() != "picked");
-                
-                /* Card Logic */
-                object[] picked = new object[cards];
-                for (int i = 0; i < cards; i++)
-                {
-                    Card c = mazzo.Pop();
-                    player.Cards.Add(c);
-
-                    picked[i] = new DTOCard()
-                    {
-                        Family = c.GetCardFamily(),
-                        Number = c.GetCardNumber()
-                    };
-                }
-
-                serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-                    new {
-                        Cards = picked
-                    }
-                ));
-                
-                t = webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-                    WebSocketMessageType.Text, result.EndOfMessage, CancellationToken.None);
-                t.Start();
-                t.Wait();
-                
-                _logger.Log(LogLevel.Information, "Message sent to Client");
-            }
-        ));
+        int playerId = game.AddPlayer(new Player("",webSocket));
         
     }
 }

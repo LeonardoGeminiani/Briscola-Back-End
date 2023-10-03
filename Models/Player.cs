@@ -9,9 +9,6 @@ public enum PlayerModes
     UserDisconnected // Ai
 }
 
-public delegate Card DropCard(ref Player player);
-public delegate void PickCards(Stack<Card> mazzo, int nCards, ref Player player);
-
 public class Player
 {
     public PlayerModes Mode { get; set; }
@@ -19,15 +16,13 @@ public class Player
 
     public WebSocket WebSocket = null;
     
-    public Player(string name, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards)
+    public Player(string name, PlayerModes mode)
     {
         Mode = mode;
         Name = name;
-        SelectDropCard = selectDropCard;
-        PickCards = pickCards;
     }
 
-    public Player(string name, WebSocket webSocket ,DropCard selectDropCard, PickCards pickCards) : this(name, PlayerModes.User, selectDropCard, pickCards)
+    public Player(string name, WebSocket webSocket) : this(name, PlayerModes.User)
     {
         this.WebSocket = webSocket;
     }
@@ -45,14 +40,4 @@ public class Player
         }
         return ret;
     }
-
-    public static void OnEvent(WebSocket webSocket, string msg)
-    {
-        
-    }
-
-    public DropCard SelectDropCard;
-    
-    // (Stack<Card> Mazzo, int Ncards, ...)
-    public PickCards PickCards;
 }
