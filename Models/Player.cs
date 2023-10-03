@@ -14,7 +14,7 @@ public class Player
     public PlayerModes Mode { get; set; }
     public string Name {get; private set; }
 
-    public WebSocket WebSocket = null;
+    public WebSocket? WebSocket = null;
     
     public Player(string name, PlayerModes mode)
     {
