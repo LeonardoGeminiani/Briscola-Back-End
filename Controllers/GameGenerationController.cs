@@ -22,7 +22,7 @@ public class GameGenerationController : ControllerBase
     }
 
     [HttpPost("/CreateGame")]
-    public IActionResult CreateGame([FromBody] string settingsJson)
+    public IActionResult CreateGame(Settings settings)
     {
         // settingsJson -> 
         // {
@@ -39,10 +39,10 @@ public class GameGenerationController : ControllerBase
                 try
                 {
                     
-                    var sett = JsonSerializer.Deserialize<Settings>(settingsJson);
-                    if (sett is null)
+                    //var sett = JsonSerializer.Deserialize<Settings>(settingsJson);
+                    if (settings is null)
                         return StatusCode(StatusCodes.Status500InternalServerError, "settings are required");
-                    GameIds[i] = new Game(sett);
+                    GameIds[i] = new Game(settings);
                 }
                 catch (Exception ex)
                 {

@@ -94,7 +94,7 @@ public class Game
         
         var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
             WebSocketMessageType.Text, true, CancellationToken.None);
-        t.Start();
+        //t.Start();
         t.Wait();
         
         Console.WriteLine("Message sent to Client");
@@ -106,7 +106,7 @@ public class Game
         {
             var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             Console.WriteLine("Message received from Client");
-            tr.Start();
+            //tr.Start();
             tr.Wait();
             result = tr.Result;
 
@@ -148,7 +148,7 @@ public class Game
         
         var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
             WebSocketMessageType.Text, true, CancellationToken.None);
-        t.Start();
+        //t.Start();
         t.Wait();
         
         Console.WriteLine("Message sent to Client");
@@ -160,7 +160,7 @@ public class Game
         {
             var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             Console.WriteLine("Message received from Client");
-            tr.Start();
+            //tr.Start();
             tr.Wait();
             result = tr.Result;
 
@@ -195,7 +195,7 @@ public class Game
         
         t = player.WebSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
             WebSocketMessageType.Text, result.EndOfMessage, CancellationToken.None);
-        t.Start();
+        //t.Start();
         t.Wait();
         
         Console.WriteLine("Message sent to Client");
@@ -290,6 +290,10 @@ public class Game
                 {
                     // game start...
                     this.Start();
+                }
+                else
+                {
+                    Console.WriteLine($"Player entered, waiting for {usersToWait}");
                 }
                 
                 return i;
