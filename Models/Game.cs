@@ -94,6 +94,7 @@ public class Game
         
         var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
             WebSocketMessageType.Text, true, CancellationToken.None);
+        //t.WaitAndUnwrapException();
         //t.Start();
         t.Wait();
         
@@ -289,12 +290,15 @@ public class Game
                 if (usersToWait == 0)
                 {
                     // game start...
+                    
+                    //Console.WriteLine($"WebSocket:{players[i-1].WebSocket.State}");
                     this.Start();
                 }
                 else
                 {
                     Console.WriteLine($"Player entered, waiting for {usersToWait}");
                 }
+                
                 
                 return i;
             }
