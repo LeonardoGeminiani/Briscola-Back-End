@@ -10,23 +10,15 @@ public enum PlayerModes
 // public delegate Card DropCard(ref Player player);
 // public delegate void PickCards(Stack<Card> mazzo, int nCards, ref Player player);
 
-public class Player
+public interface IPlayer
 {
     // public PlayerModes Mode { get; set; }
-    public string Name {get; private set; }
+    public string Name { get; }
     
-    public Player(string name /*, PlayerModes mode ,DropCard selectDropCard, PickCards pickCards*/)
-    {
-        // Mode = mode;
-        Name = name;
-        // SelectDropCard = selectDropCard;
-        // PickCards = pickCards;
-    }
-    
-    public byte PointsInGame = 0;
-    public bool TurnBriscola = false;
-    public List<Card> Cards = new();
-    readonly Stack<Card> Mazzo = new();
+    public byte PointsInGame { get; set; }
+    public bool TurnBriscola { get; set; }
+    public List<Card> Cards { get; set; }
+    private Stack<Card> Mazzo { get; }
     public void PushMazzo(Card card) => Mazzo.Push(card);
     
     public byte GetMazzoPoints() {
