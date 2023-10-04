@@ -98,19 +98,17 @@ public class Game
                 switch (msg.Status)
                 {
                     case "info":
-                        t = WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId) , result);
-                        t.Wait();
+                        await WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId) , result);
                         break;
                     case "picked":
                     case "drop":
                         PlayerReceiveQueue[playerId].Enqueue(msg);
                         break;
                     default:
-                        t = WebSocketsController.SendWSMessage(webSocket, new
+                        await WebSocketsController.SendWSMessage(webSocket, new
                         {
                             Error = "Non Valid Status"
                         }, result);
-                        t.Wait();
                         break;
                 }
             }
