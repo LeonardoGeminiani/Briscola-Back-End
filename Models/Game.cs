@@ -81,7 +81,7 @@ public class Game
             
             // on receive logic
             players[platerId]!.SocketReceiveResult = result;
-
+            
         }
         
         await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
