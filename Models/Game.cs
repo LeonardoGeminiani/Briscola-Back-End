@@ -29,7 +29,7 @@ public class Game
     private Difficulty difficulty;
     private int userNumber;
     private int usersToWait;
-
+    private Dictionary<int, Queue<SocketReceive>> PlayerReceiveQueue;
     private Stack<Card> Mazzo;
 
     public Game(Settings settings)
@@ -69,7 +69,15 @@ public class Game
         foreach (var m in Mazzo_tmp) Mazzo.Push(m);
     }
 
-    public async Task AddWS(WebSocket webSocket, int platerId, WebSocketReceiveResult result)
+    public DTOPlayerInfo GetPlayerInfo(int playerId)
+    {
+        return new DTOPlayerInfo
+        {
+            PlayerName = players[playerId].Name,
+        };
+    }
+
+    public async Task AddWS(WebSocket webSocket, int playerId, WebSocketReceiveResult result)
     {
         byte[] buffer;
 
@@ -80,46 +88,82 @@ public class Game
             Console.WriteLine( "Message received from Client");
             
             // on receive logic
-            players[platerId]!.SocketReceiveResult = result;
+            players[playerId]!.SocketReceiveResult = result;
             
+            var msg = JsonSerializer.Deserialize<SocketReceive>(WebSocketsController.BufferToString(buffer));
+
+            if (msg is not null)
+            {
+                Task t;
+                switch (msg.Status)
+                {
+                    case "info":
+                        t = WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId) , result);
+                        t.Wait();
+                        break;
+                    case "picked":
+                    case "drop":
+                        PlayerReceiveQueue[playerId].Enqueue(msg);
+                        break;
+                    default:
+                        t = WebSocketsController.SendWSMessage(webSocket, new
+                        {
+                            Error = "Non Valid Status"
+                        }, result);
+                        t.Wait();
+                        break;
+                }
+            }
         }
         
         await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         Console.WriteLine( "WebSocket connection closed");
     }
     
-    private static Card DropCardUser(ref Player player)
+    private async Task<Card> DropCardUser(int playerId)
     {
 
-        var t = WebSocketsController.SendWSMessage(player.WebSocket, new { Status = "drop" }, player.SocketReceiveResult);
-        //t.Start();
-        t.Wait();
+        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new { Status = "drop" }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client");
 
-        DTOCard? msg;
+        DTOCard? msg = null;
         WebSocketReceiveResult result;
-        
+
+        bool redo;
         do
         {
-            var buffer = new byte[1024 * 4];
-            var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            Console.WriteLine("Message received from Client");
-            //tr.Start();
-            tr.Wait();
-            result = tr.Result;
-
-            if (result.CloseStatus.HasValue)
+            redo = false;
+            if (PlayerReceiveQueue[playerId].Count == 0)
             {
-                // socket crash
-                throw new Exception("Client crash");
+                redo = true;
             }
-            
-            msg = JsonSerializer.Deserialize<DTOCard>(WebSocketsController.BufferToString(buffer));
-        } while (msg is null);
+            else
+            {
+                SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
+                if (sok.Status != "drop")
+                {
+                    await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                    {
+                        Error = "Not Allowed Action"
+                    }, players[playerId].SocketReceiveResult);
+                    redo = true;
+                }
+                else
+                {
+                    // OK
+                    msg = sok.Card;
+                }
+            }
+            if (redo)
+            {
+                // wait 1 sec and retry request
+                await Task.Delay(1000);
+            }
+        } while (redo);
 
         int i = -1;
-        foreach (var playerCard in player.Cards)
+        foreach (var playerCard in players[playerId].Cards)
         {
             i++;
             if (playerCard.Equals(msg))
@@ -130,13 +174,13 @@ public class Game
 
         if (i == -1) throw new Exception("Not Valid Card");
         
-        Card ret = player.Cards.ElementAt(i);
-        player.Cards.RemoveAt(i);
+        Card ret = players[playerId].Cards.ElementAt(i);
+        players[playerId].Cards.RemoveAt(i);
         return ret;
     }
-    private static void PickCardsUser(Stack<Card> mazzo, int cards, ref Player player)
+    
+    private async Task PickCardsUser(Stack<Card> mazzo, int cards, int playerId)
     {
-        var buffer = new byte[1024 * 4];
         
         var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
             new {
@@ -145,42 +189,67 @@ public class Game
             }
         )); // u8 for utf-8
 
-        var t = WebSocketsController.SendWSMessage(player.WebSocket, new
+        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
             Status = "pick",
             CardsNumber = cards
-        }, player.SocketReceiveResult);
-        //t.Start();
-        t.Wait();
+        }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client pp");
 
-        string msg;
-        WebSocketReceiveResult result;
+        // string msg;
+        // WebSocketReceiveResult result;
         
+        // do
+        // {
+        //     var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+        //     Console.WriteLine("Message received from Client");
+        //     //tr.Start();
+        //     tr.Wait();
+        //     result = tr.Result;
+        //
+        //     if (result.CloseStatus.HasValue)
+        //     {
+        //         // socket crash
+        //         throw new Exception("Client crash");
+        //     }
+        //
+        //     msg = WebSocketsController.BufferToString(buffer);
+        // } while (msg.Trim() != "picked");
+        
+        bool redo;
         do
         {
-            var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            Console.WriteLine("Message received from Client");
-            //tr.Start();
-            tr.Wait();
-            result = tr.Result;
-
-            if (result.CloseStatus.HasValue)
+            redo = false;
+            if (PlayerReceiveQueue[playerId].Count == 0)
             {
-                // socket crash
-                throw new Exception("Client crash");
+                redo = true;
             }
-
-            msg = WebSocketsController.BufferToString(buffer);
-        } while (msg.Trim() != "picked");
+            else
+            {
+                SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
+                if (sok.Status != "picked")
+                {
+                    await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                    {
+                        Error = "Not Allowed Action"
+                    }, players[playerId].SocketReceiveResult);
+                    redo = true;
+                }
+            }
+            if (redo)
+            {
+                // wait 1 sec and retry request
+                await Task.Delay(1000);
+            }
+        } while (redo);
         
         /* Card Logic */
         object[] picked = new object[cards];
         for (int i = 0; i < cards; i++)
         {
             Card c = mazzo.Pop();
-            player.Cards.Add(c);
+            players[playerId]!.Cards.Add(c);
 
             picked[i] = new DTOCard()
             {
@@ -189,17 +258,15 @@ public class Game
             };
         }
         
-        t = WebSocketsController.SendWSMessage(player.WebSocket, new
+        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
             Cards = picked
-        }, player.SocketReceiveResult);
-        //t.Start();
-        t.Wait();
+        }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client");
     }
 
-    private void Start()
+    private async void Start()
     {
         //  lascia la briscola sul tavolo
         Card Briscola;
@@ -217,7 +284,7 @@ public class Game
                 // var m = Mazzo.ToArray();
                 for (byte i = 0; i < players.Length; ++i){
                     // players[i]!.Cards.Add(m[i]);
-                    Game.PickCardsUser(Mazzo, 1, ref players[i]);
+                    await this.PickCardsUser(Mazzo, 1, i);
                 }
                 exit = true;
             }
@@ -225,7 +292,7 @@ public class Game
             {
                 for (byte i = 0; i < players.Length; ++i){
                     // for(byte j = 0; j < NCards; j++) players[i]!.Cards.Add(Mazzo.Pop());
-                    Game.PickCardsUser(Mazzo, NCards, ref players[i]);
+                    await this.PickCardsUser(Mazzo, NCards, i);
                 }
             }
             NCards = 1;
@@ -235,7 +302,7 @@ public class Game
                 var j = players[i];
                 //PrintTable(Table);
                 if(players[i].Mode == PlayerModes.User)
-                    Table.Push((Game.DropCardUser(ref players[i]), j));
+                    Table.Push((await this.DropCardUser(i), j));
             }
 
             byte[] points = new byte[(int)gameMode];
@@ -283,6 +350,9 @@ public class Game
             if (players[i] is null)
             {
                 players[i] = player;
+                
+                PlayerReceiveQueue.Add(i, new Queue<SocketReceive>());
+                
                 if (players[i].Mode == PlayerModes.User) usersToWait--;
                 if (usersToWait == 0)
                 {
