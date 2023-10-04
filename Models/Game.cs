@@ -29,7 +29,7 @@ public class Game
     private Difficulty difficulty;
     private int userNumber;
     private int usersToWait;
-    private Dictionary<int, Queue<SocketReceive>> PlayerReceiveQueue;
+    private Dictionary<int, Queue<SocketReceive>> PlayerReceiveQueue = new();
     private Stack<Card> Mazzo;
 
     public Game(Settings settings)
@@ -239,6 +239,7 @@ public class Game
             {
                 // wait 1 sec and retry request
                 await Task.Delay(1000);
+                Console.WriteLine("picked");
             }
         } while (redo);
         
