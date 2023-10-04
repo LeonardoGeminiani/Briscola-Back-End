@@ -33,12 +33,25 @@ public class WebSocketsController : ControllerBase
         {
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             _logger.Log(LogLevel.Information, "WebSocket connection established");
-            await Echo(webSocket, game, id);
+            
+            var buffer = new byte[1024 * 4];
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            _logger.Log(LogLevel.Information, "PlayerSettings received from Client");
+
+            var ps = JsonSerializer.Deserialize<PlayerSettings>(BufferToString(buffer));
+            if(ps is not null)
+                await Echo(webSocket, game, ps, result);
         }
         else
         {
             HttpContext.Response.StatusCode = BadRequest;
         }
+    }
+
+    public static async Task SendWSMessage(WebSocket webSocket, object message, WebSocketReceiveResult wsr)
+    {
+        var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        await webSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length), wsr.MessageType, wsr.EndOfMessage, CancellationToken.None);
     }
 
     public static string BufferToString(byte[] buffer)
@@ -53,13 +66,9 @@ public class WebSocketsController : ControllerBase
         return msg;
     }
 
-    private async Task Echo(WebSocket webSocket, Game game, int gameId)
+    private async Task Echo(WebSocket webSocket, Game game, PlayerSettings playerSettings, WebSocketReceiveResult wsr)
     {
-        // get player info...
-        
-        // add player
-        
-        int playerId = game.AddPlayer(new Player("",webSocket));
-        
+        var playerId = game.AddPlayer(new Player(playerSettings.Name, webSocket, wsr));
+        await game.AddWS(webSocket, playerId, wsr);
     }
 }

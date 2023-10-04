@@ -15,6 +15,8 @@ public class Player
     public string Name {get; private set; }
 
     public WebSocket? WebSocket = null;
+
+    public WebSocketReceiveResult? SocketReceiveResult = null;
     
     public Player(string name, PlayerModes mode)
     {
@@ -22,9 +24,10 @@ public class Player
         Name = name;
     }
 
-    public Player(string name, WebSocket webSocket) : this(name, PlayerModes.User)
+    public Player(string name, WebSocket webSocket, WebSocketReceiveResult webSocketReceiveResult) : this(name, PlayerModes.User)
     {
         this.WebSocket = webSocket;
+        this.SocketReceiveResult = webSocketReceiveResult;
     }
     
     public byte PointsInGame = 0;

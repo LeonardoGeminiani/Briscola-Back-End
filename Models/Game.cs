@@ -69,32 +69,29 @@ public class Game
         foreach (var m in Mazzo_tmp) Mazzo.Push(m);
     }
 
-    private static void SendInfoToUser(ref Player player, string infoJson)
+    public async Task AddWS(WebSocket webSocket, int platerId, WebSocketReceiveResult result)
     {
-        var buffer = new byte[1024 * 4];
+        byte[] buffer;
+
+        while (!result.CloseStatus.HasValue)
+        {
+            buffer = new byte[1024 * 4];
+            result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            Console.WriteLine( "Message received from Client");
+            
+            // on receive logic
+            players[platerId]!.SocketReceiveResult = result;
+
+        }
         
-        var serverMsg = Encoding.UTF8.GetBytes(infoJson);
-        
-        var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-            WebSocketMessageType.Text, true, CancellationToken.None);
-        t.Start();
-        t.Wait();
-        
-        Console.WriteLine("SendInfoToUser");
+        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+        Console.WriteLine( "WebSocket connection closed");
     }
+    
     private static Card DropCardUser(ref Player player)
     {
-        var buffer = new byte[1024 * 4];
-        
-        var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-            new {
-                Status = "drop",
-            }
-        )); // u8 for utf-8
-        
-        var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-            WebSocketMessageType.Text, true, CancellationToken.None);
-        //t.WaitAndUnwrapException();
+
+        var t = WebSocketsController.SendWSMessage(player.WebSocket, new { Status = "drop" }, player.SocketReceiveResult);
         //t.Start();
         t.Wait();
         
@@ -105,6 +102,7 @@ public class Game
         
         do
         {
+            var buffer = new byte[1024 * 4];
             var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             Console.WriteLine("Message received from Client");
             //tr.Start();
@@ -146,9 +144,12 @@ public class Game
                 CardsNumber = cards
             }
         )); // u8 for utf-8
-        
-        var t = player.WebSocket!.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-            WebSocketMessageType.Text, true, CancellationToken.None);
+
+        var t = WebSocketsController.SendWSMessage(player.WebSocket, new
+        {
+            Status = "pick",
+            CardsNumber = cards
+        }, player.SocketReceiveResult);
         //t.Start();
         t.Wait();
         
@@ -187,15 +188,11 @@ public class Game
                 Number = c.GetCardNumber()
             };
         }
-
-        serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-            new {
-                Cards = picked
-            }
-        ));
         
-        t = player.WebSocket.SendAsync(new ArraySegment<byte>(serverMsg, 0, serverMsg.Length),
-            WebSocketMessageType.Text, result.EndOfMessage, CancellationToken.None);
+        t = WebSocketsController.SendWSMessage(player.WebSocket, new
+        {
+            Cards = picked
+        }, player.SocketReceiveResult);
         //t.Start();
         t.Wait();
         
@@ -292,7 +289,13 @@ public class Game
                     // game start...
                     
                     //Console.WriteLine($"WebSocket:{players[i-1].WebSocket.State}");
-                    this.Start();
+                    
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("STARTTTT!!");
+                    Console.ResetColor();
+                    
+                    Thread Start = new Thread(this.Start);
+                    Start.Start();
                 }
                 else
                 {
