@@ -144,53 +144,67 @@ public class Game
 
         DTOCard? msg = null;
         WebSocketReceiveResult result;
-
+        
+        
         bool redo;
+        int indx;
         do
         {
-            redo = false;
-            if (PlayerReceiveQueue[playerId].Count == 0)
+            do
             {
-                redo = true;
-            }
-            else
-            {
-                SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
-                if (sok.Status != "drop")
+                redo = false;
+                if (PlayerReceiveQueue[playerId].Count == 0)
                 {
-                    await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
-                    {
-                        Error = "Not Allowed Action"
-                    }, players[playerId].SocketReceiveResult);
                     redo = true;
                 }
                 else
                 {
-                    // OK
-                    msg = sok.Card;
+                    SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
+                    if (sok.Status != "drop")
+                    {
+                        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                        {
+                            Error = "Not Allowed Action"
+                        }, players[playerId].SocketReceiveResult);
+                        redo = true;
+                    }
+                    else
+                    {
+                        // OK
+                        msg = sok.Card;
+                    }
+                }
+
+                if (redo)
+                {
+                    // wait 1 sec and retry request
+                    await Task.Delay(1000);
+                }
+            } while (redo);
+
+            indx = -1;
+            redo = true;
+            foreach (var playerCard in players[playerId].Cards)
+            {
+                indx++;
+                if (playerCard.Equals(msg))
+                {
+                    redo = false;
+                    break;
                 }
             }
+
             if (redo)
             {
-                // wait 1 sec and retry request
-                await Task.Delay(1000);
+                await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                {
+                    Error = "Not Valid Card"
+                }, players[playerId].SocketReceiveResult);
             }
         } while (redo);
-
-        int i = -1;
-        foreach (var playerCard in players[playerId].Cards)
-        {
-            i++;
-            if (playerCard.Equals(msg))
-            {
-                break;
-            }
-        }
-
-        if (i == -1) throw new Exception("Not Valid Card");
         
-        Card ret = players[playerId].Cards.ElementAt(i);
-        players[playerId].Cards.RemoveAt(i);
+        Card ret = players[playerId].Cards.ElementAt(indx);
+        players[playerId].Cards.RemoveAt(indx);
         return ret;
     }
     
