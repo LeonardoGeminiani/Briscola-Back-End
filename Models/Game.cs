@@ -71,9 +71,26 @@ public class Game
 
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
+        PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length - 1]; 
+        for (int i = 0, j = 0; i < players.Length; i++)
+        {
+            if(i == playerId) continue;
+            pCard[j] = new PlayerCardCnt
+            {
+                CardsNumber = players[i]!.Cards.Count,
+                PlayerName = players[i]!.Name,
+                PlayerId = i
+            };
+            j++;
+        }
+        
         return new DTOPlayerInfo
         {
-            PlayerName = players[playerId].Name,
+            PlayerName = players[playerId]!.Name,
+            CardsNumber = players[playerId]!.Cards.Count,
+            MazzoCount = players[playerId]!.MazzoCount(),
+            PlayerInGamePoints = players[playerId]!.PointsInGame,
+            Players = pCard
         };
     }
 

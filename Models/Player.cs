@@ -34,6 +34,9 @@ public class Player
     public bool TurnBriscola = false;
     public List<Card> Cards = new();
     readonly Stack<Card> Mazzo = new();
+
+    public int MazzoCount() => Mazzo.Count;
+    
     public void PushMazzo(Card card) => Mazzo.Push(card);
     
     public byte GetMazzoPoints() {
