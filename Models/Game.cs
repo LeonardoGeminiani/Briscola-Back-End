@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -296,6 +297,33 @@ public class Game
         Console.WriteLine("Message sent to Client");
     }
 
+    private Card DropCardBot(int playerId)
+    {
+        var rnd = new Random();
+        
+        switch (this.difficulty)
+        {
+            case Difficulty.Hard:
+                // to implement
+            case Difficulty.Extreme:
+                // to implement
+            default: // Easy
+                int indx = rnd.Next(0, players[playerId]!.Cards.Count);
+                Card ret = players[playerId]!.Cards.ElementAt(indx);
+                players[playerId]!.Cards.RemoveAt(indx);
+                return ret;
+        }
+    }
+
+    private void PickCardBot(Stack<Card> mazzo, int cards, int playerId)
+    {
+        for (int i = 0; i < cards; i++)
+        {
+            Card c = mazzo.Pop();
+            players[playerId]!.Cards.Add(c);
+        }
+    }
+    
     private async void Start()
     {
         //  lascia la briscola sul tavolo
@@ -314,7 +342,12 @@ public class Game
                 // var m = Mazzo.ToArray();
                 for (byte i = 0; i < players.Length; ++i){
                     // players[i]!.Cards.Add(m[i]);
-                    await this.PickCardsUser(Mazzo, 1, i);
+                    if(players[i]!.Mode == PlayerModes.User)
+                        await this.PickCardsUser(Mazzo, 1, i);
+                    else
+                    {
+                        this.PickCardBot(Mazzo, 1, i);
+                    }
                 }
                 exit = true;
             }
@@ -322,7 +355,12 @@ public class Game
             {
                 for (byte i = 0; i < players.Length; ++i){
                     // for(byte j = 0; j < NCards; j++) players[i]!.Cards.Add(Mazzo.Pop());
-                    await this.PickCardsUser(Mazzo, NCards, i);
+                    if(players[i]!.Mode == PlayerModes.User)
+                        await this.PickCardsUser(Mazzo, NCards, i);
+                    else
+                    {
+                        this.PickCardBot(Mazzo, NCards, i);
+                    }
                 }
             }
             NCards = 1;
@@ -331,8 +369,12 @@ public class Game
             {
                 var j = players[i];
                 //PrintTable(Table);
-                if(players[i].Mode == PlayerModes.User)
+                if(players[i]!.Mode == PlayerModes.User)
                     Table.Push((await this.DropCardUser(i), j));
+                else
+                {
+                    Table.Push((this.DropCardBot(i), j));
+                }
             }
 
             byte[] points = new byte[(int)gameMode];
