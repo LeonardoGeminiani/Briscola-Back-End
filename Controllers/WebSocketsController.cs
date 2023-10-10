@@ -68,7 +68,25 @@ public class WebSocketsController : ControllerBase
 
     private async Task Echo(WebSocket webSocket, Game game, PlayerSettings playerSettings, WebSocketReceiveResult wsr)
     {
-        var playerId = game.AddPlayer(new Player(playerSettings.Name, webSocket, wsr));
-        await game.AddWS(webSocket, playerId, wsr);
+        try
+        {
+            int playerId;
+            try
+            {
+                playerId = game.AddPlayer(new Player(playerSettings.Name, webSocket, wsr));
+            }
+            catch
+            {
+                playerId = game.PlayerReconnect(webSocket, wsr);
+            }
+            await game.AddWS(webSocket, playerId, wsr);
+        }
+        catch (Exception e)
+        {
+            await WebSocketsController.SendWSMessage(webSocket, new
+            {
+                Error = e.Message
+            }, wsr);
+        }
     }
 }

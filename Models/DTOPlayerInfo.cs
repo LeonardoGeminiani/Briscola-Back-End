@@ -1,10 +1,10 @@
 namespace Briscola_Back_End.Models;
 
-public struct PlayerCardCnt
+public class PlayerCardCnt
 {
-    public int CardsNumber;
-    public string PlayerName;
-    public int PlayerId;
+    public int CardsNumber { get; set; }
+    public string PlayerName { get; set; }
+    public int PlayerId { get; set; }
 }
     
 public class DTOPlayerInfo
