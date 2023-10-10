@@ -9,6 +9,15 @@ public struct PlayerCardCnt
     
 public class DTOPlayerInfo
 {
+    public string Status
+    {
+        get
+        {
+            return "info";
+        }
+    }
+
+    public int PlayerId { get; set; }
     public string PlayerName { get; set; }
     public int CardsNumber { get; set; }
     public int MazzoCount { get; set; }
