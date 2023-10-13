@@ -344,6 +344,7 @@ public class Game
             }
             for (int i = 0; i < players.Length; i++)
             {
+                if(players[i]!.Mode != PlayerModes.User) continue;
                 await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
                 {
                     Status = "playerList",
