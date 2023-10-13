@@ -417,12 +417,12 @@ public class Game
                     for (int j = 0; j < players.Length; j++)
                     {
                         if(j == i || players[j]!.Mode != PlayerModes.User) continue;
-                        await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                        await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
                         {
                             Status = "playerPick",
                             PlayerId = i,
                             NCards = NCards
-                        }, players[i]!.SocketReceiveResult);
+                        }, players[j]!.SocketReceiveResult);
                     }
                 }
             }
