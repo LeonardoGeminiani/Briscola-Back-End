@@ -504,11 +504,26 @@ public class Game
             }
         }
 
-        Player winner = players[0];
-        for(byte i = 0; i < (int)gameMode; ++i){
-            if(winner.GetMazzoPoints() < players[i].GetMazzoPoints()){
-                winner = players[i];
+        int winnerId = 0;
+        for(byte i = 0; i < players.Length; ++i){
+            if(players[winnerId]!.GetMazzoPoints() < players[i]!.GetMazzoPoints()){
+                winnerId = i;
             }
+        }
+        
+        await WebSocketsController.SendWSMessage(players[winnerId]!.WebSocket, new
+        {
+            Status = "YouWin"
+        }, players[winnerId]!.SocketReceiveResult);
+        
+        for (int i = 0; i < players.Length; ++i)
+        {
+            if(i == winnerId) continue;
+            await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+            {
+                Status = "WinnerIs",
+                PlayerId = winnerId
+            }, players[i]!.SocketReceiveResult);
         }
     }
     
