@@ -449,7 +449,7 @@ public class Game
                 for (int j = 0; j < players.Length; j++)
                 {
                     if(j == i || players[j]!.Mode != PlayerModes.User) continue;
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                    await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
                     {
                         Status = "playerDrop",
                         PlayerId = i,
@@ -458,7 +458,7 @@ public class Game
                             Family = c.GetCardFamily(),
                             Number = c.GetCardNumber()
                         }
-                    }, players[i]!.SocketReceiveResult);
+                    }, players[j]!.SocketReceiveResult);
                 }
             }
 
