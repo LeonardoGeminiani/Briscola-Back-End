@@ -525,6 +525,11 @@ public class Game
                 PlayerId = winnerId
             }, players[i]!.SocketReceiveResult);
         }
+
+        for (int i = 0; i < players.Length; ++i)
+        {
+            if (players[i]!.Mode == PlayerModes.User) await players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, "Game End", CancellationToken.None);
+        }
     }
     
     public int AddPlayer(Player player)

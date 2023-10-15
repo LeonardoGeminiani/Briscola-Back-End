@@ -33,14 +33,21 @@ public class WebSocketsController : ControllerBase
         {
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             _logger.Log(LogLevel.Information, "WebSocket connection established");
-            
-            var buffer = new byte[1024 * 4];
-            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            _logger.Log(LogLevel.Information, "PlayerSettings received from Client");
 
-            var ps = JsonSerializer.Deserialize<PlayerSettings>(BufferToString(buffer));
-            if(ps is not null)
-                await Echo(webSocket, game, ps, result);
+            try
+            {
+                var buffer = new byte[1024 * 4];
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                _logger.Log(LogLevel.Information, "PlayerSettings received from Client");
+
+                var ps = JsonSerializer.Deserialize<PlayerSettings>(BufferToString(buffer));
+                if (ps is not null)
+                    await Echo(webSocket, game, ps, result);
+            }
+            catch
+            {
+                HttpContext.Response.StatusCode = BadRequest;
+            }
         }
         else
         {
