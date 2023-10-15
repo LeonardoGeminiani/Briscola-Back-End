@@ -32,9 +32,13 @@ public class Game
     private int usersToWait;
     private Dictionary<int, Queue<SocketReceive>> PlayerReceiveQueue = new();
     private Stack<Card> Mazzo;
+    private Thread start;
+    private uint gameId;
+    private int userDisconnected;
 
-    public Game(Settings settings)
+    public Game(Settings settings, uint GameId)
     {
+        gameId = GameId;
         if (settings.userNumber < 1 || 
             settings.userNumber > 4 || 
             (int)settings.briscolaMode < settings.userNumber) 
@@ -327,6 +331,7 @@ public class Game
         }
     }
     
+    [Obsolete("Obsolete")]
     private async void Start()
     {
         const int NoPlayer = -1;
@@ -530,6 +535,14 @@ public class Game
         {
             if (players[i]!.Mode == PlayerModes.User) await players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, "Game End", CancellationToken.None);
         }
+        CloseGame();
+    }
+
+    [Obsolete("Obsolete")]
+    private void CloseGame()
+    {
+        start.Abort();
+        GameGenerationController.CloseGameId(gameId);
     }
     
     public int AddPlayer(Player player)
@@ -553,8 +566,8 @@ public class Game
                     Console.WriteLine("STARTTTT!!");
                     Console.ResetColor();
                     
-                    Thread Start = new Thread(this.Start);
-                    Start.Start();
+                    start = new Thread(this.Start);
+                    start.Start();
                 }
                 else
                 {
@@ -569,8 +582,15 @@ public class Game
         throw new Exception("Game is full");
     }
 
+    [Obsolete("Obsolete")]
     public void PlayerDisconnect(int index)
     {
+        userDisconnected++;
+        if (userDisconnected == userNumber)
+        {
+            CloseGame();
+            return;
+        }
         if (players[index] is not null)
         {
             if (players[index]!.Mode != PlayerModes.User)
@@ -588,6 +608,7 @@ public class Game
 
     public int PlayerReconnect(WebSocket webSocket, WebSocketReceiveResult wsr)
     {
+        userDisconnected--;
         for (int i = 0; i < players.Length; i++)
         {
             if (players[i] is not null && players[i]!.Mode == PlayerModes.UserDisconnected)

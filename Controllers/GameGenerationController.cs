@@ -42,7 +42,7 @@ public class GameGenerationController : ControllerBase
                     //var sett = JsonSerializer.Deserialize<Settings>(settingsJson);
                     if (settings is null)
                         return StatusCode(StatusCodes.Status500InternalServerError, "settings are required");
-                    GameIds[i] = new Game(settings);
+                    GameIds[i] = new Game(settings, i);
                 }
                 catch (Exception ex)
                 {
@@ -92,10 +92,10 @@ public class GameGenerationController : ControllerBase
         }
     }
     
-    public static void CloseGameId(int id)
+    public static void CloseGameId(uint id)
     {
         id -= StartGameId;
-        if(id < 0 || id >= GameIds.Length) throw new ArgumentOutOfRangeException(nameof(id));
+        if(id >= GameIds.Length) throw new ArgumentOutOfRangeException(nameof(id));
         
         if (GameIds[id] is not null && !GameIds[id]!.Socked)
             throw new Exception("you can't close a non socked Game before timeout");
