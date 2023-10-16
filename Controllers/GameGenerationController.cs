@@ -97,7 +97,7 @@ public class GameGenerationController : ControllerBase
         // id -= StartGameId;
         if(id >= GameIds.Length) throw new ArgumentOutOfRangeException(nameof(id));
         
-        if (GameIds[id] is not null && !GameIds[id]!.Socked)
+        if (GameIds[id] is null && !GameIds[id]!.Socked)
             throw new Exception("you can't close a non socked Game before timeout");
         GameIds[id] = null;
     }
