@@ -30,7 +30,7 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "http://api.ittsrewritten.com:80",
+      "applicationUrl": "http://api.ittsrewritten.com:25565",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
