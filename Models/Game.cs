@@ -124,6 +124,8 @@ public class Game
                         await WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId) , result);
                         break;
                     case "picked":
+                        PlayerReceiveQueue[playerId].Enqueue(msg);   
+                        break;                                       
                     case "drop":
                         Console.WriteLine($"drop: {msg.Card.Family},{msg.Card.Number}");
                         PlayerReceiveQueue[playerId].Enqueue(msg);
