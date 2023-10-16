@@ -506,14 +506,25 @@ public class Game
                 }
                 
                 Stack<(int Player, Card Card)>? WithBriscola = null;
+
+                CardFamilies? comanda = null;
+                Stack<(int Player, Card Card)>? WithComanda = null;
+                
                 foreach (var card in Table)
                 {
                     if (card.player == NoPlayer) continue;
+                    comanda ??= card.card.GetCardFamily();
                     players[card.player]!.TurnBriscola = card.card.family == Briscola.family;
                     if (players[card.player]!.TurnBriscola)
                     {
                         WithBriscola ??= new();
                         WithBriscola.Push((card.player, card.card));
+                    }
+
+                    if (card.card.family == comanda)
+                    {
+                        WithComanda ??= new();
+                        WithComanda.Push((card.player, card.card));
                     }
 
                     players[card.player]!.PointsInGame += card.card.ValueInGame;
@@ -522,10 +533,15 @@ public class Game
                 int max = 0;
                 if (WithBriscola is null)
                 {
-                    for (int i = 0; i < players.Length; i++)
+                    max = WithComanda.ElementAt(0).Player;
+                    foreach (var p in WithComanda)
                     {
-                        if (players[i]!.PointsInGame > players[max]!.PointsInGame) max = i;
+                        if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
                     }
+                    // for (int i = 0; i < players.Length; i++)
+                    // {
+                    //     if (players[i]!.PointsInGame > players[max]!.PointsInGame) max = i;
+                    // }
                 }
                 else
                 {
