@@ -502,7 +502,7 @@ public class Game
 
                 foreach (var i in Table)
                 {
-                    Console.WriteLine($"Card: {i.card.GetCardFamily()},{i.card.GetCardNumber()}");
+                    Console.WriteLine($"Card: {i.card.GetCardFamily()},{i.card.GetCardNumber()},{i.player}");
                 }
                 
                 Stack<(int Player, Card Card)>? WithBriscola = null;
