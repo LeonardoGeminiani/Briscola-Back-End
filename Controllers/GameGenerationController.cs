@@ -94,7 +94,7 @@ public class GameGenerationController : ControllerBase
     
     public static void CloseGameId(uint id)
     {
-        id -= StartGameId;
+        // id -= StartGameId;
         if(id >= GameIds.Length) throw new ArgumentOutOfRangeException(nameof(id));
         
         if (GameIds[id] is not null && !GameIds[id]!.Socked)
