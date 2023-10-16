@@ -407,6 +407,7 @@ public class Game
             }
 
             byte NCards = 3;
+            int OlpPlayerTable = 0;
             bool exit = false;
             while (!exit)
             {
@@ -466,8 +467,9 @@ public class Game
                 }
 
                 NCards = 1;
-
-                for (var i = 0; i < players.Length; i++)
+                
+                
+                for (var i = OlpPlayerTable; i < players.Length; i++)
                 {
                     //PrintTable(Table);
                     Card c;
@@ -493,6 +495,15 @@ public class Game
                                 Number = c.GetCardNumber()
                             }
                         }, players[j]!.SocketReceiveResult);
+                    }
+
+                    if (OlpPlayerTable != 0)
+                    {
+                        if (i == OlpPlayerTable - 1) i++;
+                        else if (i == OlpPlayerTable)
+                        {
+                            i = -1;
+                        }
                     }
                 }
 
@@ -553,6 +564,7 @@ public class Game
                 }
 
                 Console.WriteLine($"Player {players[max]!.Name}, ha preso le carte");
+                OlpPlayerTable = max;
                 for (int i = 0; i < (exit ? Table.Count : (int)gameMode); ++i)
                 {
                     players[max]!.PushMazzo(Table.Pop().card);
