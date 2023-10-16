@@ -544,7 +544,7 @@ public class Game
 
         for (int i = 0; i < players.Length; ++i)
         {
-            if (players[i]!.Mode == PlayerModes.User) await players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, "Game End", CancellationToken.None);
+            if (players[i]!.Mode == PlayerModes.User) await players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
         }
         CloseGame();
     }
