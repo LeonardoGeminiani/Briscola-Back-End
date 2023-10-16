@@ -479,6 +479,8 @@ public class Game
                     }, players[j]!.SocketReceiveResult);
                 }
             }
+            
+            Thread.Sleep(1500);
 
             byte[] points = new byte[(int)gameMode];
             
