@@ -610,6 +610,7 @@ public class Game
         userDisconnected++;
         if (userDisconnected == userNumber)
         {
+            Console.WriteLine(userDisconnected + " " + userNumber);
             CloseGame();
             return;
         }
