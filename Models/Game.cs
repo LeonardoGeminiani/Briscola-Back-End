@@ -106,37 +106,45 @@ public class Game
 
         while (!result.CloseStatus.HasValue)
         {
-            buffer = new byte[1024 * 4];
-            result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            Console.WriteLine( "Message received from Client");
-            
-            // on receive logic
-            players[playerId]!.SocketReceiveResult = result;
-            
-            var msg = JsonSerializer.Deserialize<SocketReceive>(WebSocketsController.BufferToString(buffer));
-
-            if (msg is not null)
+            try
             {
-                Task t;
-                switch (msg.Status)
+                buffer = new byte[1024 * 4];
+                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                Console.WriteLine("Message received from Client");
+
+                // on receive logic
+                players[playerId]!.SocketReceiveResult = result;
+
+                var msg = JsonSerializer.Deserialize<SocketReceive>(WebSocketsController.BufferToString(buffer));
+
+                if (msg is not null)
                 {
-                    case "info":
-                        await WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId) , result);
-                        break;
-                    case "picked":
-                        PlayerReceiveQueue[playerId].Enqueue(msg);   
-                        break;                                       
-                    case "drop":
-                        Console.WriteLine($"drop: {msg.Card.Family},{msg.Card.Number}");
-                        PlayerReceiveQueue[playerId].Enqueue(msg);
-                        break;
-                    default:
-                        await WebSocketsController.SendWSMessage(webSocket, new
-                        {
-                            Error = "Non Valid Status"
-                        }, result);
-                        break;
+                    Task t;
+                    switch (msg.Status)
+                    {
+                        case "info":
+                            await WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId), result);
+                            break;
+                        case "picked":
+                            PlayerReceiveQueue[playerId].Enqueue(msg);
+                            break;
+                        case "drop":
+                            //Console.WriteLine($"drop: {msg.Card.Family},{msg.Card.Number}");
+                            PlayerReceiveQueue[playerId].Enqueue(msg);
+                            break;
+                        default:
+                            await WebSocketsController.SendWSMessage(webSocket, new
+                            {
+                                Error = "Non Valid Status"
+                            }, result);
+                            break;
+                    }
+
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
         
