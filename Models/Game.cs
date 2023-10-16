@@ -529,6 +529,7 @@ public class Game
                 }
                 else
                 {
+                    max = WithBriscola.ElementAt(0).Player;
                     foreach (var p in WithBriscola)
                     {
                         if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
