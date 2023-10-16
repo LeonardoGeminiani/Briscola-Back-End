@@ -298,6 +298,7 @@ public class Game
         
         await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
+            Status = "Cards",
             Cards = picked
         }, players[playerId].SocketReceiveResult);
         
