@@ -610,7 +610,8 @@ public class Game
                     await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
                     {
                         Status = "WinnerIs",
-                        PlayerId = winnerId
+                        PlayerId = winnerId,
+                        Name = players[winnerId]!.Name
                     }, players[i]!.SocketReceiveResult);
             }
 
