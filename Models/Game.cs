@@ -500,6 +500,11 @@ public class Game
 
                 byte[] points = new byte[(int)gameMode];
 
+                foreach (var i in Table)
+                {
+                    Console.WriteLine($"Card: {i.card.GetCardFamily()},{i.card.GetCardNumber()}");
+                }
+                
                 Stack<(int Player, Card Card)>? WithBriscola = null;
                 foreach (var card in Table)
                 {
