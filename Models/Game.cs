@@ -525,19 +525,21 @@ public class Game
             }
         }
         
-        await WebSocketsController.SendWSMessage(players[winnerId]!.WebSocket, new
-        {
-            Status = "YouWin"
-        }, players[winnerId]!.SocketReceiveResult);
+        if(players[winnerId]!.Mode == PlayerModes.User)
+            await WebSocketsController.SendWSMessage(players[winnerId]!.WebSocket, new
+            {
+                Status = "YouWin"
+            }, players[winnerId]!.SocketReceiveResult);
         
         for (int i = 0; i < players.Length; ++i)
         {
             if(i == winnerId) continue;
-            await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
-            {
-                Status = "WinnerIs",
-                PlayerId = winnerId
-            }, players[i]!.SocketReceiveResult);
+            if(players[i]!.Mode == PlayerModes.User)
+                await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                {
+                    Status = "WinnerIs",
+                    PlayerId = winnerId
+                }, players[i]!.SocketReceiveResult);
         }
 
         for (int i = 0; i < players.Length; ++i)
