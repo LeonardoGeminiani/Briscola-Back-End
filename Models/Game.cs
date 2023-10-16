@@ -125,6 +125,7 @@ public class Game
                         break;
                     case "picked":
                     case "drop":
+                        Console.WriteLine($"drop: {msg.Card.Family},{msg.Card.Number}");
                         PlayerReceiveQueue[playerId].Enqueue(msg);
                         break;
                     default:
