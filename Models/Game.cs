@@ -332,7 +332,6 @@ public class Game
         }
     }
     
-    [Obsolete("Obsolete")]
     private async void Start()
     {
         const int NoPlayer = -1;
@@ -549,10 +548,9 @@ public class Game
         CloseGame();
     }
 
-    [Obsolete("Obsolete")]
     private void CloseGame()
     {
-        start.Abort();
+        start.Interrupt();
         GameGenerationController.CloseGameId(gameId);
     }
     
