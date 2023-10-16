@@ -500,11 +500,12 @@ public class Game
                 players[max]!.PushMazzo(Table.Pop().card);
             }
 
-            await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
-            {
-                Status = "pickTableCards"
-            }, players[max]!.SocketReceiveResult);
-            
+            if(players[max]!.Mode == PlayerModes.User)
+                await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
+                {
+                    Status = "pickTableCards"
+                }, players[max]!.SocketReceiveResult);
+                
             for (int i = 0; i < players.Length; i++)
             {
                 if(i == max) continue;
