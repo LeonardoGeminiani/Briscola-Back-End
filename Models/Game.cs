@@ -564,6 +564,8 @@ public class Game
     private void CloseGame()
     {
         start.Interrupt();
+        start.Join();
+        Console.WriteLine("interrupted");
         GameGenerationController.CloseGameId(gameId);
     }
     
