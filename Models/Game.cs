@@ -36,6 +36,8 @@ public class Game
     private uint gameId;
     private int userDisconnected;
 
+    private bool Stopped = false;
+
     public Game(Settings settings, uint GameId)
     {
         gameId = GameId;
@@ -197,7 +199,10 @@ public class Game
                 if (redo)
                 {
                     // wait 1 sec and retry request
+                    Console.WriteLine("dorpp");
                     await Task.Delay(1000);
+
+                    if (Stopped) throw new Exception("Close");
                 }
             } while (redo);
 
@@ -290,6 +295,8 @@ public class Game
                 // wait 1 sec and retry request
                 await Task.Delay(1000);
                 Console.WriteLine("picked");
+                
+                if(Stopped) throw new Exception("stop");
             }
         } while (redo);
         
@@ -564,7 +571,7 @@ public class Game
     private void CloseGame()
     {
         start.Interrupt();
-        start.Join();
+        Stopped = true;
         Console.WriteLine("interrupted");
         GameGenerationController.CloseGameId(gameId);
     }
@@ -591,7 +598,15 @@ public class Game
                     Console.ResetColor();
                     
                     start = new Thread(this.Start);
-                    start.Start();
+
+                    try
+                    {
+                        start.Start();
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Game closed...");
+                    }
                 }
                 else
                 {
