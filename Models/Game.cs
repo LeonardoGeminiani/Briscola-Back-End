@@ -500,7 +500,7 @@ public class Game
 
                 byte[] points = new byte[(int)gameMode];
 
-                foreach (var i in Table)
+                foreach (var i in Table.AsEnumerable().Reverse())
                 {
                     Console.WriteLine($"Card: {i.card.GetCardFamily()},{i.card.GetCardNumber()},{i.player}");
                 }
@@ -510,7 +510,7 @@ public class Game
                 CardFamilies? comanda = null;
                 Stack<(int Player, Card Card)>? WithComanda = null;
                 
-                foreach (var card in Table)
+                foreach (var card in Table.AsEnumerable().Reverse())
                 {
                     if (card.player == NoPlayer) continue;
                     comanda ??= card.card.GetCardFamily();
@@ -527,7 +527,7 @@ public class Game
                         WithComanda.Push((card.player, card.card));
                     }
 
-                    players[card.player]!.PointsInGame += card.card.ValueInGame;
+                    players[card.player]!.PointsInGame = card.card.ValueInGame;
                 }
 
                 int max = 0;
