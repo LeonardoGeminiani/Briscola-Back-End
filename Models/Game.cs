@@ -534,7 +534,7 @@ public class Game
                 if (WithBriscola is null)
                 {
                     max = WithComanda.ElementAt(0).Player;
-                    foreach (var p in WithComanda)
+                    foreach (var p in WithComanda.AsEnumerable().Reverse())
                     {
                         if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
                     }
@@ -546,7 +546,7 @@ public class Game
                 else
                 {
                     max = WithBriscola.ElementAt(0).Player;
-                    foreach (var p in WithBriscola)
+                    foreach (var p in WithBriscola.AsEnumerable().Reverse())
                     {
                         if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
                     }
