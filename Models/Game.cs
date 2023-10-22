@@ -83,7 +83,6 @@ public class Game
         foreach (var m in Mazzo_tmp)
         {
             Mazzo.Push(m);
-            Console.WriteLine(m is null);
         }
     }
 
@@ -336,6 +335,7 @@ public class Game
 
     private Card DropCardBot(int playerId)
     {
+        Thread.Sleep(1500);
         var rnd = new Random();
         
         switch (this.difficulty)
