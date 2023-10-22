@@ -65,11 +65,19 @@ public class Game
         var Mazzo_tmp = new Card[(int)gameMode == 3 ? 39 : 40];
         for (byte i = 0, j = 1, k = 0; i < Mazzo_tmp.Length; i++, j++) { // populate mazzo
             var family = (CardFamilies)k;
-            if(!((int)gameMode == 3 && j == 2 && family == CardFamilies.Coppe))
+            if (!((int)gameMode == 3 && j == 2 && family == CardFamilies.Coppe))
+            {
                 Mazzo_tmp[i] = new(j, family);
-            if(j == 10) {
-                j = 0;
-                ++k;
+                if (j == 10)
+                {
+                    j = 0;
+                    ++k;
+                }
+            }
+            else
+            {
+                i--;
+                j--;
             }
         }
         rnd.Shuffle<Card>(Mazzo_tmp); // shuffle the mazzo 
