@@ -495,6 +495,10 @@ public class Game
                     for (int j = 0; j < players.Length; j++)
                     {
                         if (j == i || players[j]!.Mode != PlayerModes.User) continue;
+                        foreach (var VARIABLE in players)
+                        {
+                            Console.WriteLine(VARIABLE is null);
+                        }
                         await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
                         {
                             Status = "playerDrop",
