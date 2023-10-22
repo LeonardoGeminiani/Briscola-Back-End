@@ -73,7 +73,11 @@ public class Game
             }
         }
         rnd.Shuffle<Card>(Mazzo_tmp); // shuffle the mazzo 
-        foreach (var m in Mazzo_tmp) Mazzo.Push(m);
+        foreach (var m in Mazzo_tmp)
+        {
+            Mazzo.Push(m);
+            Console.WriteLine(m);
+        }
     }
 
     public DTOPlayerInfo GetPlayerInfo(int playerId)
