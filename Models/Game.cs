@@ -415,6 +415,7 @@ public class Game
                 {
                     if (players[i].Cards.Count == 0)
                     {
+                        Console.WriteLine(players[i].Name);
                         exit = true;
                         break;
                     }
