@@ -62,7 +62,7 @@ public class Game
 
         // Mazzo creation
         var rnd = new Random();
-        var Mazzo_tmp = new Card[40];
+        var Mazzo_tmp = new Card[(int)gameMode == 3 ? 39 : 40];
         for (byte i = 0, j = 1, k = 0; i < Mazzo_tmp.Length; i++, j++) { // populate mazzo
             var family = (CardFamilies)k;
             if(!((int)gameMode == 3 && j == 2 && family == CardFamilies.Coppe))
@@ -495,10 +495,6 @@ public class Game
                     for (int j = 0; j < players.Length; j++)
                     {
                         if (j == i || players[j]!.Mode != PlayerModes.User) continue;
-                        foreach (var VARIABLE in players)
-                        {
-                            Console.WriteLine(VARIABLE is null);
-                        }
                         await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
                         {
                             Status = "playerDrop",
