@@ -77,7 +77,6 @@ public class Game
             else
             {
                 i--;
-                j--;
             }
         }
         rnd.Shuffle<Card>(Mazzo_tmp); // shuffle the mazzo 
