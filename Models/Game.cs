@@ -363,8 +363,8 @@ public class Game
 
     private async void Start()
     {
-        /*try
-        {*/
+        try
+        {
             const int NoPlayer = -1;
 
             {
@@ -654,11 +654,11 @@ public class Game
 
             CloseGame();
 
-        /*}
+        }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-        }*/
+        }
     }
 
     private void CloseGame()
