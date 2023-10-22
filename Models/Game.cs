@@ -76,7 +76,7 @@ public class Game
         foreach (var m in Mazzo_tmp)
         {
             Mazzo.Push(m);
-            Console.WriteLine(m);
+            Console.WriteLine(m is null);
         }
     }
 
