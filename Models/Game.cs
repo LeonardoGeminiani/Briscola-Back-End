@@ -126,7 +126,15 @@ public class Game
 
                 // on receive logic
                 players[playerId]!.SocketReceiveResult = result;
-
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Ws Closed");
+                return;
+            }
+            
+            try
+            {
                 var msg = JsonSerializer.Deserialize<SocketReceive>(WebSocketsController.BufferToString(buffer));
 
                 if (msg is not null)
