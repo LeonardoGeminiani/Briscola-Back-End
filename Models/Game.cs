@@ -411,16 +411,6 @@ public class Game
             bool exit = false;
             while (!exit)
             {
-                for (int i = 0; i < players.Length; i++)
-                {
-                    if (players[i].Cards.Count == 0)
-                    {
-                        Console.WriteLine(players[i].Name);
-                        exit = true;
-                        break;
-                    }
-                }
-                
                 // maziere distribuische carte a tutti
                 if (Mazzo.Count == (int)gameMode - 1)
                 {
@@ -605,6 +595,16 @@ public class Game
                         Status = "pickedTableCards",
                         Player = i
                     }, players[i]!.SocketReceiveResult);
+                }
+                
+                for (int i = 0; i < players.Length; i++)
+                {
+                    if (players[i].Cards.Count == 0)
+                    {
+                        Console.WriteLine(players[i].Name);
+                        exit = true; // exit while
+                        break; // break the for
+                    }
                 }
             }
 
