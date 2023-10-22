@@ -411,12 +411,31 @@ public class Game
             bool exit = false;
             while (!exit)
             {
+                for (int i = 0; i < players.Length; i++)
+                {
+                    if (players[i].Cards.Count == 0)
+                    {
+                        exit = true;
+                        break;
+                    }
+                }
+                
                 // maziere distribuische carte a tutti
                 if (Mazzo.Count == (int)gameMode - 1)
                 {
                     // ultima mano
                     Mazzo.Push(Briscola);
                     // var m = Mazzo.ToArray();
+
+                    for (int i = 0; i < players.Length; i++)
+                    {
+                        if(players[i]!.Mode != PlayerModes.User) continue;
+                        await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                        {
+                            Status = "BriscolaInMazzo"
+                        }, players[i]!.SocketReceiveResult);
+                    }
+                    
                     for (byte i = 0; i < players.Length; ++i)
                     {
                         // players[i]!.Cards.Add(m[i]);
@@ -439,9 +458,9 @@ public class Game
                         }
                     }
 
-                    exit = true;
+                    //exit = true;
                 }
-                else
+                else if(Mazzo.Count != 0)
                 {
                     for (byte i = 0; i < players.Length; ++i)
                     {
