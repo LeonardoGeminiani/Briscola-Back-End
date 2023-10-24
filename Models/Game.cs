@@ -591,18 +591,7 @@ public class Game
                         if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
                     }
                 }
-
-
-                for (int i = 0; i < players.Length; i++)
-                {
-                    if(players[i]!.Mode != PlayerModes.User) continue;
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
-                    {
-                        Status = "Points",
-                        Value = players[i]!.GetMazzoPoints()
-                    }, players[i]!.SocketReceiveResult);
-                }
-
+                
                 Console.WriteLine($"Player {players[max]!.Name}, ha preso le carte");
                 OlpPlayerTable = max;
                 for (int i = 0; i < (exit ? Table.Count : (int)gameMode); ++i)
@@ -611,10 +600,17 @@ public class Game
                 }
 
                 if (players[max]!.Mode == PlayerModes.User)
+                {
                     await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
                     {
                         Status = "pickTableCards"
                     }, players[max]!.SocketReceiveResult);
+                    await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
+                    {
+                        Status = "Points",
+                        Value = players[max]!.GetMazzoPoints()
+                    }, players[max]!.SocketReceiveResult);
+                }
 
                 for (int i = 0; i < players.Length; i++)
                 {
