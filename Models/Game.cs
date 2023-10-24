@@ -182,7 +182,7 @@ public class Game
         await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
             Status = "Msg",
-            Value = "devi lanciare una carta"
+            Value = "Devi lanciare una carta"
         }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client");
@@ -268,7 +268,7 @@ public class Game
         await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
             Status = "Msg",
-            Value = "è il tuo turno di pescare"
+            Value = "É il tuo turno di pescare"
         }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client pp");
