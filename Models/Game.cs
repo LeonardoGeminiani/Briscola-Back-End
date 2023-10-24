@@ -599,7 +599,7 @@ public class Game
                     await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
                     {
                         Status = "Points",
-                        Value = players[i]!.PointsInGame
+                        Value = players[i]!.GetMazzoPoints()
                     }, players[i]!.SocketReceiveResult);
                 }
 
