@@ -592,6 +592,17 @@ public class Game
                     }
                 }
 
+
+                for (int i = 0; i < players.Length; i++)
+                {
+                    if(players[i]!.Mode != PlayerModes.User) continue;
+                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                    {
+                        Status = "Points",
+                        Value = players[i]!.PointsInGame
+                    }, players[i]!.SocketReceiveResult);
+                }
+
                 Console.WriteLine($"Player {players[max]!.Name}, ha preso le carte");
                 OlpPlayerTable = max;
                 for (int i = 0; i < (exit ? Table.Count : (int)gameMode); ++i)
