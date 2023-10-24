@@ -179,6 +179,12 @@ public class Game
 
         await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new { Status = "drop" }, players[playerId].SocketReceiveResult);
         
+        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        {
+            Status = "Msg",
+            Value = "devi lanciare una carta"
+        }, players[playerId].SocketReceiveResult);
+        
         Console.WriteLine("Message sent to Client");
 
         DTOCard? msg = null;
@@ -253,17 +259,16 @@ public class Game
     private async Task PickCardsUser(Stack<Card> mazzo, int cards, int playerId)
     {
         
-        var serverMsg = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(
-            new {
-                Status = "pick",
-                CardsNumber = cards
-            }
-        )); // u8 for utf-8
-
         await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
         {
             Status = "pick",
             CardsNumber = cards
+        }, players[playerId].SocketReceiveResult);
+
+        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        {
+            Status = "Msg",
+            Value = "è il tuo turno di pescare"
         }, players[playerId].SocketReceiveResult);
         
         Console.WriteLine("Message sent to Client pp");
