@@ -35,7 +35,8 @@ public class Game
     private Thread start;
     private uint gameId;
     private int userDisconnected;
-
+    private Card Briscola;
+    private Stack<(Card card, int player)> Table;
     private bool Stopped = false;
 
     public Game(Settings settings, uint GameId)
@@ -85,25 +86,28 @@ public class Game
             Mazzo.Push(m);
         }
     }
-
-    public object GetGameConnectionStatus(int playerId)
-    {
-        return GetPlayerInfo(playerId);
-    }
     
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
         PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length - 1]; 
-        for (int i = 0, j = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Length; i++)
         {
-            if(i == playerId) continue;
-            pCard[j] = new PlayerCardCnt
+            Card? c = null;
+            foreach (var card in Table)
+            {
+                if (card.player == i)
+                {
+                    c = card.card;
+                    break;
+                }
+            }
+            pCard[i] = new PlayerCardCnt
             {
                 CardsNumber = players[i]!.Cards.Count,
                 PlayerName = players[i]!.Name,
-                PlayerId = i
+                PlayerId = i,
+                DropCard = c
             };
-            j++;
         }
         
         return new DTOPlayerInfo
@@ -113,7 +117,8 @@ public class Game
             CardsNumber = players[playerId]!.Cards.Count,
             MazzoCount = players[playerId]!.MazzoCount(),
             PlayerInGamePoints = players[playerId]!.PointsInGame,
-            Players = pCard
+            Players = pCard,
+            Briscola = this.Briscola
         };
     }
 
@@ -415,10 +420,9 @@ public class Game
                 }
             }
 
-            //  lascia la briscola sul tavolo
-            Card Briscola;
+            //  lascia la briscola sul tavoloù
+            Table = new();
             Card tmp = Briscola = Mazzo.Pop();
-            Stack<(Card card, int player)> Table = new();
             Table.Push((tmp, NoPlayer));
 
             for (int i = 0; i < players.Length; i++)
