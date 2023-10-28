@@ -89,7 +89,7 @@ public class Game
     
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
-        PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length - 1]; 
+        PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length]; 
         for (int i = 0; i < players.Length; i++)
         {
             Card? c = null;
