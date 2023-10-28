@@ -127,7 +127,7 @@ public class Game
             PlayerId = playerId,
             CardsNumber = players[playerId]!.Cards.Count,
             MazzoCount = players[playerId]!.MazzoCount(),
-            PlayerInGamePoints = players[playerId]!.PointsInGame,
+            PlayerPoints = players[playerId]!.GetMazzoPoints(),
             Players = pCard,
             Briscola = this.Briscola
         };

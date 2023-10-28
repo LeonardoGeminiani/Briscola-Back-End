@@ -22,7 +22,7 @@ public class DTOPlayerInfo
     public string PlayerName { get; set; }
     public int CardsNumber { get; set; }
     public int MazzoCount { get; set; }
-    public byte PlayerInGamePoints { get; set; }
+    public byte PlayerPoints { get; set; }
     public PlayerCardCnt[] Players { get; set; }
     public Card? Briscola { get; set; }
 }
