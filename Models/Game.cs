@@ -86,6 +86,11 @@ public class Game
         }
     }
 
+    public object GetGameConnectionStatus(int playerId)
+    {
+        return GetPlayerInfo(playerId);
+    }
+    
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
         PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length - 1]; 
