@@ -92,7 +92,7 @@ public class Game
         await WebSocketsController.SendWSMessage(ws, new
         {
             Status = "YourId",
-            YourId = playerId
+            Id = playerId
         }, wsr);
 
         await WebSocketsController.SendWSMessage(ws, GetPlayerInfo(playerId), wsr);
