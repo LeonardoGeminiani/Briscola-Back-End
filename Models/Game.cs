@@ -86,6 +86,17 @@ public class Game
             Mazzo.Push(m);
         }
     }
+
+    public async Task PlayerReconnectSend(WebSocket ws, int playerId, WebSocketReceiveResult wsr)
+    {
+        await WebSocketsController.SendWSMessage(ws, new
+        {
+            Status = "YourId",
+            YourId = playerId
+        }, wsr);
+
+        await WebSocketsController.SendWSMessage(ws, GetPlayerInfo(playerId), wsr);
+    }
     
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
@@ -149,7 +160,6 @@ public class Game
 
                 if (msg is not null)
                 {
-                    Task t;
                     switch (msg.Status)
                     {
                         case "info":
