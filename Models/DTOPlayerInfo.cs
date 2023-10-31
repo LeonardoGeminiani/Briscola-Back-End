@@ -5,7 +5,7 @@ public class PlayerCardCnt
     public int CardsNumber { get; set; }
     public string PlayerName { get; set; }
     public int PlayerId { get; set; }
-    public Card? DropCard { get; set; }
+    public DTOCard? DropCard { get; set; }
 }
     
 public class DTOPlayerInfo
@@ -24,5 +24,5 @@ public class DTOPlayerInfo
     public int MazzoCount { get; set; }
     public byte PlayerPoints { get; set; }
     public PlayerCardCnt[] Players { get; set; }
-    public Card? Briscola { get; set; }
+    public DTOCard? Briscola { get; set; }
 }

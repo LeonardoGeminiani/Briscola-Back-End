@@ -117,7 +117,11 @@ public class Game
                 CardsNumber = players[i]!.Cards.Count,
                 PlayerName = players[i]!.Name,
                 PlayerId = i,
-                DropCard = c
+                DropCard = new DTOCard()
+                {
+                    Family = c.GetCardFamily(),
+                    Number = c.GetCardNumber()
+                }
             };
         }
         
@@ -129,7 +133,11 @@ public class Game
             MazzoCount = players[playerId]!.MazzoCount(),
             PlayerPoints = players[playerId]!.GetMazzoPoints(),
             Players = pCard,
-            Briscola = this.Briscola
+            Briscola = new DTOCard()
+            {
+                Family = this.Briscola.GetCardFamily(),
+                Number = this.Briscola.GetCardNumber()
+            }
         };
     }
 
