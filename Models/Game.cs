@@ -117,11 +117,11 @@ public class Game
                 CardsNumber = players[i]!.Cards.Count,
                 PlayerName = players[i]!.Name,
                 PlayerId = i,
-                DropCard = new DTOCard()
+                DropCard = c is not null ? new DTOCard()
                 {
                     Family = c.GetCardFamily(),
                     Number = c.GetCardNumber()
-                }
+                } : null
             };
         }
         
