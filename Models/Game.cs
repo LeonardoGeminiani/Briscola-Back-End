@@ -96,6 +96,21 @@ public class Game
         }, wsr);
 
         await WebSocketsController.SendWSMessage(ws, GetPlayerInfo(playerId), wsr);
+
+        DTOCard[] cs = new DTOCard[players[playerId]!.Cards.Count];
+        for (int i = 0; i < cs.Length; ++i)
+        {
+            cs[i] = new DTOCard()
+            {
+                Family = players[playerId]!.Cards[i].GetCardFamily(),
+                Number = players[playerId]!.Cards[i].GetCardNumber()
+            };
+        }
+        await WebSocketsController.SendWSMessage(ws, new
+        {
+            Status = "YourCard",
+            Cards = cs
+        }, wsr);
     }
     
     public DTOPlayerInfo GetPlayerInfo(int playerId)
