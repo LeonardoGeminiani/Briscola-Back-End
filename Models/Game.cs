@@ -174,6 +174,7 @@ public class Game
             catch (Exception e)
             {
                 Console.WriteLine("Ws Closed");
+                PlayerDisconnect(playerId);
                 return;
             }
             
@@ -768,7 +769,6 @@ public class Game
         throw new Exception("Game is full");
     }
 
-    [Obsolete("Obsolete")]
     public void PlayerDisconnect(int index)
     {
         userDisconnected++;
