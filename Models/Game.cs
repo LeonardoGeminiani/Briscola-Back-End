@@ -581,14 +581,14 @@ public class Game
                 {
                     if (card.player == noPlayer) continue;
                     comanda ??= card.card.GetCardFamily();
-                    _players[card.player]!.TurnBriscola = card.card.family == _briscola.family;
+                    _players[card.player]!.TurnBriscola = card.card.Family == _briscola.Family;
                     if (_players[card.player]!.TurnBriscola)
                     {
                         withBriscola ??= new();
                         withBriscola.Push((card.player, card.card));
                     }
 
-                    if (card.card.family == comanda)
+                    if (card.card.Family == comanda)
                     {
                         withComanda.Push((card.player, card.card));
                     }

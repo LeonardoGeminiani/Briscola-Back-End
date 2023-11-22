@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/leo/Projects/Briscola-Back-End/Briscola-Back-End.csproj": {}
+    "/home/leonardo/Projects/Briscola-Back-End/Briscola-Back-End.csproj": {}
   },
   "projects": {
-    "/home/leo/Projects/Briscola-Back-End/Briscola-Back-End.csproj": {
+    "/home/leonardo/Projects/Briscola-Back-End/Briscola-Back-End.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/leo/Projects/Briscola-Back-End/Briscola-Back-End.csproj",
+        "projectUniqueName": "/home/leonardo/Projects/Briscola-Back-End/Briscola-Back-End.csproj",
         "projectName": "Briscola-Back-End",
-        "projectPath": "/home/leo/Projects/Briscola-Back-End/Briscola-Back-End.csproj",
-        "packagesPath": "/home/leo/.nuget/packages/",
-        "outputPath": "/home/leo/Projects/Briscola-Back-End/obj/",
+        "projectPath": "/home/leonardo/Projects/Briscola-Back-End/Briscola-Back-End.csproj",
+        "packagesPath": "/home/leonardo/.nuget/packages/",
+        "outputPath": "/home/leonardo/Projects/Briscola-Back-End/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/leo/.nuget/NuGet/NuGet.Config"
+          "/home/leonardo/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -56,7 +56,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/leo/dotnet/sdk/7.0.401/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/leonardo/dotnet/sdk/7.0.401/RuntimeIdentifierGraph.json"
         }
       }
     }
