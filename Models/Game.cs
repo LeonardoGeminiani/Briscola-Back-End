@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 using Briscola_Back_End.Controllers;
 using Briscola_Back_End.Utils;
@@ -24,51 +22,50 @@ public enum Difficulty
 public class Game
 {
     public DateTime Date { get; private set; }
-    public bool Socked { get; private set; }
-    private BriscolaMode gameMode;
-    private Player?[] players;
-    private Difficulty difficulty;
-    private int userNumber;
-    private int usersToWait;
-    private Dictionary<int, Queue<SocketReceive>> PlayerReceiveQueue = new();
-    private Stack<Card> Mazzo;
-    private Thread start;
-    private uint gameId;
-    private int userDisconnected;
-    private Card Briscola;
-    private Stack<(Card card, int player)> Table;
-    private bool Stopped = false;
+    private BriscolaMode _gameMode;
+    private Player?[] _players;
+    private Difficulty _difficulty;
+    private int _userNumber;
+    private int _usersToWait;
+    private Dictionary<int, Queue<SocketReceive>> _playerReceiveQueue = new();
+    private Stack<Card> _mazzo;
+    private Thread _start;
+    private uint _gameId;
+    private int _userDisconnected;
+    private Card _briscola;
+    private Stack<(Card card, int player)> _table;
+    private bool _stopped;
 
-    public Game(Settings settings, uint GameId)
+    public Game(Settings settings, uint gameId)
     {
-        gameId = GameId;
+        _gameId = gameId;
         if (settings.userNumber < 1 || 
             settings.userNumber > 4 || 
             (int)settings.briscolaMode < settings.userNumber) 
             throw new ArgumentException($"{nameof(settings.userNumber)}, not valid");
         
         Date = DateTime.Now;
-        gameMode = settings.briscolaMode;
-        players = new Player[(int)gameMode];
-        difficulty = settings.difficulty;
-        userNumber = usersToWait = settings.userNumber;
+        _gameMode = settings.briscolaMode;
+        _players = new Player[(int)_gameMode];
+        _difficulty = settings.difficulty;
+        _userNumber = _usersToWait = settings.userNumber;
 
         // create bots
-        for (int i = 0; i < ((int)gameMode - userNumber); i++)
+        for (int i = 0; i < ((int)_gameMode - _userNumber); i++)
         {
-            players[i] = new Player($"bot {i}", PlayerModes.Ai);
+            _players[i] = new Player($"bot {i}", PlayerModes.Ai);
         }
         
-        Mazzo = new Stack<Card>();
+        _mazzo = new Stack<Card>();
 
         // Mazzo creation
         var rnd = new Random();
-        var Mazzo_tmp = new Card[(int)gameMode == 3 ? 39 : 40];
-        for (byte i = 0, j = 1, k = 0; i < Mazzo_tmp.Length; i++, j++) { // populate mazzo
+        var mazzoTmp = new Card[(int)_gameMode == 3 ? 39 : 40];
+        for (byte i = 0, j = 1, k = 0; i < mazzoTmp.Length; i++, j++) { // populate mazzo
             var family = (CardFamilies)k;
-            if (!((int)gameMode == 3 && j == 2 && family == CardFamilies.Coppe))
+            if (!((int)_gameMode == 3 && j == 2 && family == CardFamilies.Coppe))
             {
-                Mazzo_tmp[i] = new(j, family);
+                mazzoTmp[i] = new(j, family);
                 if (j == 10)
                 {
                     j = 0;
@@ -80,10 +77,10 @@ public class Game
                 i--;
             }
         }
-        rnd.Shuffle<Card>(Mazzo_tmp); // shuffle the mazzo 
-        foreach (var m in Mazzo_tmp)
+        rnd.Shuffle(mazzoTmp); // shuffle the mazzo 
+        foreach (var m in mazzoTmp)
         {
-            Mazzo.Push(m);
+            _mazzo.Push(m);
         }
     }
 
@@ -97,13 +94,13 @@ public class Game
 
         await WebSocketsController.SendWSMessage(ws, GetPlayerInfo(playerId), wsr);
 
-        DTOCard[] cs = new DTOCard[players[playerId]!.Cards.Count];
+        DtoCard[] cs = new DtoCard[_players[playerId]!.Cards.Count];
         for (int i = 0; i < cs.Length; ++i)
         {
-            cs[i] = new DTOCard()
+            cs[i] = new DtoCard()
             {
-                Family = players[playerId]!.Cards[i].GetCardFamily(),
-                Number = players[playerId]!.Cards[i].GetCardNumber()
+                Family = _players[playerId]!.Cards[i].GetCardFamily(),
+                Number = _players[playerId]!.Cards[i].GetCardNumber()
             };
         }
         await WebSocketsController.SendWSMessage(ws, new
@@ -115,11 +112,11 @@ public class Game
     
     public DTOPlayerInfo GetPlayerInfo(int playerId)
     {
-        PlayerCardCnt[] pCard = new PlayerCardCnt[players.Length]; 
-        for (int i = 0; i < players.Length; i++)
+        PlayerCardCnt[] pCard = new PlayerCardCnt[_players.Length]; 
+        for (int i = 0; i < _players.Length; i++)
         {
             Card? c = null;
-            foreach (var card in Table)
+            foreach (var card in _table)
             {
                 if (card.player == i)
                 {
@@ -129,10 +126,10 @@ public class Game
             }
             pCard[i] = new PlayerCardCnt
             {
-                CardsNumber = players[i]!.Cards.Count,
-                PlayerName = players[i]!.Name,
+                CardsNumber = _players[i]!.Cards.Count,
+                PlayerName = _players[i]!.Name,
                 PlayerId = i,
-                DropCard = c is not null ? new DTOCard()
+                DropCard = c is not null ? new DtoCard()
                 {
                     Family = c.GetCardFamily(),
                     Number = c.GetCardNumber()
@@ -142,21 +139,21 @@ public class Game
         
         return new DTOPlayerInfo
         {
-            PlayerName = players[playerId]!.Name,
+            PlayerName = _players[playerId]!.Name,
             PlayerId = playerId,
-            CardsNumber = players[playerId]!.Cards.Count,
-            MazzoCount = players[playerId]!.MazzoCount(),
-            PlayerPoints = players[playerId]!.GetMazzoPoints(),
+            CardsNumber = _players[playerId]!.Cards.Count,
+            MazzoCount = _players[playerId]!.MazzoCount(),
+            PlayerPoints = _players[playerId]!.GetMazzoPoints(),
             Players = pCard,
-            Briscola = new DTOCard()
+            Briscola = new DtoCard()
             {
-                Family = this.Briscola.GetCardFamily(),
-                Number = this.Briscola.GetCardNumber()
+                Family = this._briscola.GetCardFamily(),
+                Number = this._briscola.GetCardNumber()
             }
         };
     }
 
-    public async Task AddWS(WebSocket webSocket, int playerId, WebSocketReceiveResult result)
+    public async Task AddWs(WebSocket webSocket, int playerId, WebSocketReceiveResult result)
     {
         byte[] buffer;
 
@@ -169,9 +166,9 @@ public class Game
                 Console.WriteLine("Message received from Client");
 
                 // on receive logic
-                players[playerId]!.SocketReceiveResult = result;
+                _players[playerId]!.SocketReceiveResult = result;
             }
-            catch (Exception e)
+            catch
             {
                 Console.WriteLine("Ws Closed");
                 PlayerDisconnect(playerId);
@@ -190,11 +187,11 @@ public class Game
                             await WebSocketsController.SendWSMessage(webSocket, GetPlayerInfo(playerId), result);
                             break;
                         case "picked":
-                            PlayerReceiveQueue[playerId].Enqueue(msg);
+                            _playerReceiveQueue[playerId].Enqueue(msg);
                             break;
                         case "drop":
                             //Console.WriteLine($"drop: {msg.Card.Family},{msg.Card.Number}");
-                            PlayerReceiveQueue[playerId].Enqueue(msg);
+                            _playerReceiveQueue[playerId].Enqueue(msg);
                             break;
                         default:
                             await WebSocketsController.SendWSMessage(webSocket, new
@@ -220,20 +217,18 @@ public class Game
     
     private async Task<Card> DropCardUser(int playerId)
     {
-
-        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new { Status = "drop" }, players[playerId].SocketReceiveResult);
         
-        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new { Status = "drop" }, _players[playerId]!.SocketReceiveResult!);
+        
+        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
         {
             Status = "Msg",
             Value = "Devi lanciare una carta"
-        }, players[playerId].SocketReceiveResult);
+        }, _players[playerId]!.SocketReceiveResult!);
         
         Console.WriteLine("Message sent to Client");
 
-        DTOCard? msg = null;
-        WebSocketReceiveResult result;
-        
+        DtoCard? msg = null;
         
         bool redo;
         int indx;
@@ -242,19 +237,19 @@ public class Game
             do
             {
                 redo = false;
-                if (PlayerReceiveQueue[playerId].Count == 0)
+                if (_playerReceiveQueue[playerId].Count == 0)
                 {
                     redo = true;
                 }
                 else
                 {
-                    SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
+                    SocketReceive sok = _playerReceiveQueue[playerId].Dequeue();
                     if (sok.Status != "drop")
                     {
-                        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
                         {
                             Error = "Not Allowed Action"
-                        }, players[playerId].SocketReceiveResult);
+                        }, _players[playerId]!.SocketReceiveResult!);
                         redo = true;
                     }
                     else
@@ -270,9 +265,9 @@ public class Game
                     Console.WriteLine("dorpp");
                     await Task.Delay(1000);
                     
-                    if (Stopped) throw new Exception("Close");
+                    if (_stopped) throw new Exception("Close");
                     
-                    if (players[playerId]!.Mode == PlayerModes.UserDisconnected)
+                    if (_players[playerId]!.Mode == PlayerModes.UserDisconnected)
                     {
                         return DropCardBot(playerId);
                     }
@@ -281,7 +276,7 @@ public class Game
 
             indx = -1;
             redo = true;
-            foreach (var playerCard in players[playerId].Cards)
+            foreach (var playerCard in _players[playerId]!.Cards)
             {
                 indx++;
                 if (playerCard.Equals(msg))
@@ -293,72 +288,52 @@ public class Game
 
             if (redo)
             {
-                await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
                 {
                     Error = "Not Valid Card"
-                }, players[playerId].SocketReceiveResult);
+                }, _players[playerId]!.SocketReceiveResult!);
             }
         } while (redo);
         
-        Card ret = players[playerId].Cards.ElementAt(indx);
-        players[playerId].Cards.RemoveAt(indx);
+        Card ret = _players[playerId]!.Cards.ElementAt(indx);
+        _players[playerId]!.Cards.RemoveAt(indx);
         return ret;
     }
     
     private async Task PickCardsUser(Stack<Card> mazzo, int cards, int playerId)
     {
         
-        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
         {
             Status = "pick",
             CardsNumber = cards
-        }, players[playerId].SocketReceiveResult);
+        }, _players[playerId]!.SocketReceiveResult!);
 
-        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
         {
             Status = "Msg",
             Value = "É il tuo turno di pescare"
-        }, players[playerId].SocketReceiveResult);
+        }, _players[playerId]!.SocketReceiveResult!);
         
         Console.WriteLine("Message sent to Client pp");
-
-        // string msg;
-        // WebSocketReceiveResult result;
-        
-        // do
-        // {
-        //     var tr = player.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        //     Console.WriteLine("Message received from Client");
-        //     //tr.Start();
-        //     tr.Wait();
-        //     result = tr.Result;
-        //
-        //     if (result.CloseStatus.HasValue)
-        //     {
-        //         // socket crash
-        //         throw new Exception("Client crash");
-        //     }
-        //
-        //     msg = WebSocketsController.BufferToString(buffer);
-        // } while (msg.Trim() != "picked");
         
         bool redo;
         do
         {
             redo = false;
-            if (PlayerReceiveQueue[playerId].Count == 0)
+            if (_playerReceiveQueue[playerId].Count == 0)
             {
                 redo = true;
             }
             else
             {
-                SocketReceive sok = PlayerReceiveQueue[playerId].Dequeue();
+                SocketReceive sok = _playerReceiveQueue[playerId].Dequeue();
                 if (sok.Status != "picked")
                 {
-                    await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+                    await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
                     {
                         Error = "Not Allowed Action"
-                    }, players[playerId].SocketReceiveResult);
+                    }, _players[playerId]!.SocketReceiveResult!);
                     redo = true;
                 }
             }
@@ -368,9 +343,9 @@ public class Game
                 await Task.Delay(1000);
                 Console.WriteLine("picked");
                 
-                if(Stopped) throw new Exception("stop");
+                if(_stopped) throw new Exception("stop");
                 
-                if (players[playerId]!.Mode == PlayerModes.UserDisconnected)
+                if (_players[playerId]!.Mode == PlayerModes.UserDisconnected)
                 {
                     PickCardBot(mazzo, cards, playerId);
                     return;
@@ -383,20 +358,20 @@ public class Game
         for (int i = 0; i < cards; i++)
         {
             Card c = mazzo.Pop();
-            players[playerId]!.Cards.Add(c);
+            _players[playerId]!.Cards.Add(c);
 
-            picked[i] = new DTOCard()
+            picked[i] = new DtoCard()
             {
                 Family = c.GetCardFamily(),
                 Number = c.GetCardNumber()
             };
         }
         
-        await WebSocketsController.SendWSMessage(players[playerId].WebSocket, new
+        await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
         {
             Status = "Cards",
             Cards = picked
-        }, players[playerId].SocketReceiveResult);
+        }, _players[playerId]!.SocketReceiveResult!);
         
         Console.WriteLine("Message sent to Client");
     }
@@ -406,16 +381,16 @@ public class Game
         Thread.Sleep(1500);
         var rnd = new Random();
         
-        switch (this.difficulty)
+        switch (this._difficulty)
         {
             case Difficulty.Hard:
                 // to implement
             case Difficulty.Extreme:
                 // to implement
             default: // Easy
-                int indx = rnd.Next(0, players[playerId]!.Cards.Count);
-                Card ret = players[playerId]!.Cards.ElementAt(indx);
-                players[playerId]!.Cards.RemoveAt(indx);
+                int indx = rnd.Next(0, _players[playerId]!.Cards.Count);
+                Card ret = _players[playerId]!.Cards.ElementAt(indx);
+                _players[playerId]!.Cards.RemoveAt(indx);
                 return ret;
         }
     }
@@ -425,7 +400,7 @@ public class Game
         for (int i = 0; i < cards; i++)
         {
             Card c = mazzo.Pop();
-            players[playerId]!.Cards.Add(c);
+            _players[playerId]!.Cards.Add(c);
         }
     }
 
@@ -433,162 +408,158 @@ public class Game
     {
         try
         {
-            const int NoPlayer = -1;
+            const int noPlayer = -1;
 
             {
-                PlayerCardCnt[] ps = new PlayerCardCnt[players.Length];
-                for (int i = 0; i < players.Length; i++)
+                PlayerCardCnt[] ps = new PlayerCardCnt[_players.Length];
+                for (int i = 0; i < _players.Length; i++)
                 {
                     ps[i] = new PlayerCardCnt
                     {
-                        CardsNumber = players[i]!.Cards.Count,
-                        PlayerName = players[i]!.Name,
+                        CardsNumber = _players[i]!.Cards.Count,
+                        PlayerName = _players[i]!.Name,
                         PlayerId = i
                     };
                 }
 
-                for (int i = 0; i < players.Length; i++)
+                for (int i = 0; i < _players.Length; i++)
                 {
-                    if (players[i]!.Mode != PlayerModes.User) continue;
+                    if (_players[i]!.Mode != PlayerModes.User) continue;
 
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                    await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                     {
                         Status = "YourId",
                         Id = i
-                    }, players[i]!.SocketReceiveResult);
+                    }, _players[i]!.SocketReceiveResult!);
 
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                    await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                     {
                         Status = "playerList",
                         Players = ps
-                    }, players[i]!.SocketReceiveResult);
+                    }, _players[i]!.SocketReceiveResult!);
                 }
             }
 
             //  lascia la briscola sul tavoloù
-            Table = new();
-            Card tmp = Briscola = Mazzo.Pop();
-            Table.Push((tmp, NoPlayer));
+            _table = new();
+            Card tmp = _briscola = _mazzo.Pop();
+            _table.Push((tmp, noPlayer));
 
-            for (int i = 0; i < players.Length; i++)
+            for (int i = 0; i < _players.Length; i++)
             {
-                if (players[i]!.Mode != PlayerModes.User) continue;
-                await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                if (_players[i]!.Mode != PlayerModes.User) continue;
+                await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                 {
                     Status = "briscola",
-                    Card = new DTOCard
+                    Card = new DtoCard
                     {
-                        Family = Briscola.GetCardFamily(),
-                        Number = Briscola.GetCardNumber()
+                        Family = _briscola.GetCardFamily(),
+                        Number = _briscola.GetCardNumber()
                     }
-                }, players[i]!.SocketReceiveResult);
+                }, _players[i]!.SocketReceiveResult!);
             }
 
-            byte NCards = 3;
-            int OlpPlayerTable = 0;
+            byte nCards = 3;
+            int olpPlayerTable = 0;
             bool exit = false;
             while (!exit)
             {
                 // maziere distribuische carte a tutti
-                if (Mazzo.Count == (int)gameMode - 1)
+                if (_mazzo.Count == (int)_gameMode - 1)
                 {
                     // ultima mano
-                    Mazzo.Push(Briscola);
+                    _mazzo.Push(_briscola);
                     // var m = Mazzo.ToArray();
 
-                    for (int i = 0; i < players.Length; i++)
+                    for (int i = 0; i < _players.Length; i++)
                     {
-                        if(players[i]!.Mode != PlayerModes.User) continue;
-                        await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                        if(_players[i]!.Mode != PlayerModes.User) continue;
+                        await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                         {
                             Status = "BriscolaInMazzo"
-                        }, players[i]!.SocketReceiveResult);
+                        }, _players[i]!.SocketReceiveResult!);
                     }
                     
-                    for (byte i = 0; i < players.Length; ++i)
+                    for (byte i = 0; i < _players.Length; ++i)
                     {
-                        // players[i]!.Cards.Add(m[i]);
-                        if (players[i]!.Mode == PlayerModes.User)
-                            await this.PickCardsUser(Mazzo, 1, i);
+                        if (_players[i]!.Mode == PlayerModes.User)
+                            await this.PickCardsUser(_mazzo, 1, i);
                         else
                         {
-                            this.PickCardBot(Mazzo, 1, i);
+                            this.PickCardBot(_mazzo, 1, i);
                         }
 
-                        for (int j = 0; j < players.Length; j++)
+                        for (int j = 0; j < _players.Length; j++)
                         {
-                            if (j == i || players[j]!.Mode != PlayerModes.User) continue;
-                            await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
+                            if (j == i || _players[j]!.Mode != PlayerModes.User) continue;
+                            await WebSocketsController.SendWSMessage(_players[j]!.WebSocket!, new
                             {
                                 Status = "playerPick",
                                 PlayerId = i,
                                 NCards = 1
-                            }, players[j]!.SocketReceiveResult);
+                            }, _players[j]!.SocketReceiveResult!);
                         }
                     }
 
-                    //exit = true;
                 }
-                else if(Mazzo.Count != 0)
+                else if(_mazzo.Count != 0)
                 {
-                    for (byte i = 0; i < players.Length; ++i)
+                    for (byte i = 0; i < _players.Length; ++i)
                     {
-                        // for(byte j = 0; j < NCards; j++) players[i]!.Cards.Add(Mazzo.Pop());
-                        if (players[i]!.Mode == PlayerModes.User)
-                            await this.PickCardsUser(Mazzo, NCards, i);
+                        if (_players[i]!.Mode == PlayerModes.User)
+                            await this.PickCardsUser(_mazzo, nCards, i);
                         else
                         {
-                            this.PickCardBot(Mazzo, NCards, i);
+                            this.PickCardBot(_mazzo, nCards, i);
                         }
 
-                        for (int j = 0; j < players.Length; j++)
+                        for (int j = 0; j < _players.Length; j++)
                         {
-                            if (j == i || players[j]!.Mode != PlayerModes.User) continue;
-                            await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
+                            if (j == i || _players[j]!.Mode != PlayerModes.User) continue;
+                            await WebSocketsController.SendWSMessage(_players[j]!.WebSocket!, new
                             {
                                 Status = "playerPick",
                                 PlayerId = i,
-                                NCards = NCards
-                            }, players[j]!.SocketReceiveResult);
+                                NCards = nCards
+                            }, _players[j]!.SocketReceiveResult!);
                         }
                     }
                 }
 
-                NCards = 1;
+                nCards = 1;
                 
                 
-                for (var i = OlpPlayerTable; i < players.Length; i++)
+                for (var i = olpPlayerTable; i < _players.Length; i++)
                 {
-                    //PrintTable(Table);
                     Card c;
-                    if (players[i]!.Mode == PlayerModes.User)
+                    if (_players[i]!.Mode == PlayerModes.User)
                         c = await this.DropCardUser(i);
                     else
                     {
                         c = this.DropCardBot(i);
                     }
 
-                    Table.Push((c, i));
+                    _table.Push((c, i));
 
-                    for (int j = 0; j < players.Length; j++)
+                    for (int j = 0; j < _players.Length; j++)
                     {
-                        if (j == i || players[j]!.Mode != PlayerModes.User) continue;
-                        await WebSocketsController.SendWSMessage(players[j]!.WebSocket, new
+                        if (j == i || _players[j]!.Mode != PlayerModes.User) continue;
+                        await WebSocketsController.SendWSMessage(_players[j]!.WebSocket!, new
                         {
                             Status = "playerDrop",
                             PlayerId = i,
-                            Card = new DTOCard
+                            Card = new DtoCard
                             {
                                 Family = c.GetCardFamily(),
                                 Number = c.GetCardNumber()
                             }
-                        }, players[j]!.SocketReceiveResult);
+                        }, _players[j]!.SocketReceiveResult!);
                     }
 
-                    if (OlpPlayerTable != 0)
+                    if (olpPlayerTable != 0)
                     {
-                        if (i == OlpPlayerTable - 1) i++;
-                        else if (i == OlpPlayerTable)
+                        if (i == olpPlayerTable - 1) i++;
+                        else if (i == olpPlayerTable)
                         {
                             i = -1;
                         }
@@ -597,45 +568,42 @@ public class Game
 
                 Thread.Sleep(1500);
 
-                byte[] points = new byte[(int)gameMode];
-
-                foreach (var i in Table.AsEnumerable().Reverse())
+                foreach (var i in _table.AsEnumerable().Reverse())
                 {
                     Console.WriteLine($"Card: {i.card.GetCardFamily()},{i.card.GetCardNumber()},{i.player}");
                 }
                 
-                Stack<(int Player, Card Card)>? WithBriscola = null;
+                Stack<(int Player, Card Card)>? withBriscola = null;
 
                 CardFamilies? comanda = null;
-                Stack<(int Player, Card Card)>? WithComanda = null;
+                Stack<(int Player, Card Card)> withComanda = new Stack<(int Player, Card Card)>();
                 
-                foreach (var card in Table.AsEnumerable().Reverse())
+                foreach (var card in _table.AsEnumerable().Reverse())
                 {
-                    if (card.player == NoPlayer) continue;
+                    if (card.player == noPlayer) continue;
                     comanda ??= card.card.GetCardFamily();
-                    players[card.player]!.TurnBriscola = card.card.family == Briscola.family;
-                    if (players[card.player]!.TurnBriscola)
+                    _players[card.player]!.TurnBriscola = card.card.family == _briscola.family;
+                    if (_players[card.player]!.TurnBriscola)
                     {
-                        WithBriscola ??= new();
-                        WithBriscola.Push((card.player, card.card));
+                        withBriscola ??= new();
+                        withBriscola.Push((card.player, card.card));
                     }
 
                     if (card.card.family == comanda)
                     {
-                        WithComanda ??= new();
-                        WithComanda.Push((card.player, card.card));
+                        withComanda.Push((card.player, card.card));
                     }
 
-                    players[card.player]!.PointsInGame = card.card.ValueInGame;
+                    _players[card.player]!.PointsInGame = card.card.ValueInGame;
                 }
 
-                int max = 0;
-                if (WithBriscola is null)
+                int max;
+                if (withBriscola is null)
                 {
-                    max = WithComanda.ElementAt(0).Player;
-                    foreach (var p in WithComanda.AsEnumerable().Reverse())
+                    max = withComanda.ElementAt(0).Player;
+                    foreach (var p in withComanda.AsEnumerable().Reverse())
                     {
-                        if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
+                        if (p.Card.ValueInGame > _players[max]!.PointsInGame) max = p.Player;
                     }
                     // for (int i = 0; i < players.Length; i++)
                     // {
@@ -644,49 +612,49 @@ public class Game
                 }
                 else
                 {
-                    max = WithBriscola.ElementAt(0).Player;
-                    foreach (var p in WithBriscola.AsEnumerable().Reverse())
+                    max = withBriscola.ElementAt(0).Player;
+                    foreach (var p in withBriscola.AsEnumerable().Reverse())
                     {
-                        if (p.Card.ValueInGame > players[max]!.PointsInGame) max = p.Player;
+                        if (p.Card.ValueInGame > _players[max]!.PointsInGame) max = p.Player;
                     }
                 }
                 
-                Console.WriteLine($"Player {players[max]!.Name}, ha preso le carte");
-                OlpPlayerTable = max;
-                for (int i = 0; i < (exit ? Table.Count : (int)gameMode); ++i)
+                Console.WriteLine($"Player {_players[max]!.Name}, ha preso le carte");
+                olpPlayerTable = max;
+                for (int i = 0; i < (exit ? _table.Count : (int)_gameMode); ++i)
                 {
-                    players[max]!.PushMazzo(Table.Pop().card);
+                    _players[max]!.PushMazzo(_table.Pop().card);
                 }
 
-                if (players[max]!.Mode == PlayerModes.User)
+                if (_players[max]!.Mode == PlayerModes.User)
                 {
-                    await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
+                    await WebSocketsController.SendWSMessage(_players[max]!.WebSocket!, new
                     {
                         Status = "pickTableCards"
-                    }, players[max]!.SocketReceiveResult);
-                    await WebSocketsController.SendWSMessage(players[max]!.WebSocket, new
+                    }, _players[max]!.SocketReceiveResult!);
+                    await WebSocketsController.SendWSMessage(_players[max]!.WebSocket!, new
                     {
                         Status = "Points",
-                        Value = players[max]!.GetMazzoPoints()
-                    }, players[max]!.SocketReceiveResult);
+                        Value = _players[max]!.GetMazzoPoints()
+                    }, _players[max]!.SocketReceiveResult!);
                 }
 
-                for (int i = 0; i < players.Length; i++)
+                for (int i = 0; i < _players.Length; i++)
                 {
-                    if (i == max || players[i]!.Mode != PlayerModes.User) continue;
+                    if (i == max || _players[i]!.Mode != PlayerModes.User) continue;
 
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                    await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                     {
                         Status = "pickedTableCards",
                         Player = i
-                    }, players[i]!.SocketReceiveResult);
+                    }, _players[i]!.SocketReceiveResult!);
                 }
                 
-                for (int i = 0; i < players.Length; i++)
+                for (int i = 0; i < _players.Length; i++)
                 {
-                    if (players[i].Cards.Count == 0)
+                    if (_players[i]!.Cards.Count == 0)
                     {
-                        Console.WriteLine(players[i].Name);
+                        Console.WriteLine(_players[i]!.Name);
                         exit = true; // exit while
                         break; // break the for
                     }
@@ -694,36 +662,36 @@ public class Game
             }
 
             int winnerId = 0;
-            for (byte i = 0; i < players.Length; ++i)
+            for (byte i = 0; i < _players.Length; ++i)
             {
-                if (players[winnerId]!.GetMazzoPoints() < players[i]!.GetMazzoPoints())
+                if (_players[winnerId]!.GetMazzoPoints() < _players[i]!.GetMazzoPoints())
                 {
                     winnerId = i;
                 }
             }
 
-            if (players[winnerId]!.Mode == PlayerModes.User)
-                await WebSocketsController.SendWSMessage(players[winnerId]!.WebSocket, new
+            if (_players[winnerId]!.Mode == PlayerModes.User)
+                await WebSocketsController.SendWSMessage(_players[winnerId]!.WebSocket!, new
                 {
                     Status = "YouWin"
-                }, players[winnerId]!.SocketReceiveResult);
+                }, _players[winnerId]!.SocketReceiveResult!);
 
-            for (int i = 0; i < players.Length; ++i)
+            for (int i = 0; i < _players.Length; ++i)
             {
                 if (i == winnerId) continue;
-                if (players[i]!.Mode == PlayerModes.User)
-                    await WebSocketsController.SendWSMessage(players[i]!.WebSocket, new
+                if (_players[i]!.Mode == PlayerModes.User)
+                    await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                     {
                         Status = "WinnerIs",
                         PlayerId = winnerId,
-                        Name = players[winnerId]!.Name
-                    }, players[i]!.SocketReceiveResult);
+                        Name = _players[winnerId]!.Name
+                    }, _players[i]!.SocketReceiveResult!);
             }
 
-            for (int i = 0; i < players.Length; ++i)
+            for (int i = 0; i < _players.Length; ++i)
             {
-                if (players[i]!.Mode == PlayerModes.User)
-                    await players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
+                if (_players[i]!.Mode == PlayerModes.User)
+                    await _players[i]!.WebSocket!.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
             }
 
             CloseGame();
@@ -737,24 +705,24 @@ public class Game
 
     private void CloseGame()
     {
-        start.Interrupt();
-        Stopped = true;
+        _start.Interrupt();
+        _stopped = true;
         Console.WriteLine("interrupted");
-        GameGenerationController.CloseGameId(gameId);
+        GameGenerationController.CloseGameId(_gameId);
     }
     
     public int AddPlayer(Player player)
     {
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < _players.Length; i++)
         {
-            if (players[i] is null)
+            if (_players[i] is null)
             {
-                players[i] = player;
+                _players[i] = player;
                 
-                PlayerReceiveQueue.Add(i, new Queue<SocketReceive>());
+                _playerReceiveQueue.Add(i, new Queue<SocketReceive>());
                 
-                if (players[i].Mode == PlayerModes.User) usersToWait--;
-                if (usersToWait == 0)
+                if (_players[i]!.Mode == PlayerModes.User) _usersToWait--;
+                if (_usersToWait == 0)
                 {
                     // game start...
                     
@@ -764,12 +732,12 @@ public class Game
                     Console.WriteLine("STARTTTT!!");
                     Console.ResetColor();
                     
-                    start = new Thread(this.Start);
-                    start.Start();
+                    _start = new Thread(this.Start);
+                    _start.Start();
                 }
                 else
                 {
-                    Console.WriteLine($"Player entered, waiting for {usersToWait}");
+                    Console.WriteLine($"Player entered, waiting for {_usersToWait}");
                 }
                 
                 
@@ -782,22 +750,22 @@ public class Game
 
     public void PlayerDisconnect(int index)
     {
-        userDisconnected++;
-        if (userDisconnected == userNumber)
+        _userDisconnected++;
+        if (_userDisconnected == _userNumber)
         {
-            Console.WriteLine(userDisconnected + " " + userNumber);
+            Console.WriteLine(_userDisconnected + " " + _userNumber);
             CloseGame();
             return;
         }
-        if (players[index] is not null)
+        if (_players[index] is not null)
         {
-            if (players[index]!.Mode != PlayerModes.User)
+            if (_players[index]!.Mode != PlayerModes.User)
             {
                 throw new ArgumentException($"index: {nameof(index)}, not a User player");
             }
 
-            players[index]!.Mode = PlayerModes.UserDisconnected;
-            players[index]!.WebSocket = null;
+            _players[index]!.Mode = PlayerModes.UserDisconnected;
+            _players[index]!.WebSocket = null;
             return;
         }
         
@@ -806,14 +774,14 @@ public class Game
 
     public int PlayerReconnect(WebSocket webSocket, WebSocketReceiveResult wsr)
     {
-        userDisconnected--;
-        for (int i = 0; i < players.Length; i++)
+        _userDisconnected--;
+        for (int i = 0; i < _players.Length; i++)
         {
-            if (players[i] is not null && players[i]!.Mode == PlayerModes.UserDisconnected)
+            if (_players[i] is not null && _players[i]!.Mode == PlayerModes.UserDisconnected)
             {
-                players[i]!.Mode = PlayerModes.User;
-                players[i]!.WebSocket = webSocket;
-                players[i]!.SocketReceiveResult = wsr;
+                _players[i]!.Mode = PlayerModes.User;
+                _players[i]!.WebSocket = webSocket;
+                _players[i]!.SocketReceiveResult = wsr;
                 return i;
             }
         }

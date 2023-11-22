@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Briscola_Back_End.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,14 +12,7 @@ public class GameGenerationController : ControllerBase
     private const int EndGameId = 100;
     
     private static readonly Game?[] GameIds = new Game[EndGameId + 1 - StartGameId];
-
-    private readonly ILogger<GameGenerationController> _logger;
-
-    public GameGenerationController(ILogger<GameGenerationController> logger)
-    {
-        _logger = logger;
-    }
-
+    
     [HttpPost("/CreateGame")]
     public IActionResult CreateGame(Settings settings)
     {
@@ -30,17 +22,14 @@ public class GameGenerationController : ControllerBase
         //     "userNumber": 2,
         //      "difficulty": 1
         // }
-
-
+        
         for (uint i = 0; i < GameIds.Length; ++i)
         {
             if (GameIds[i] is null)
             {
                 try
                 {
-                    
-                    //var sett = JsonSerializer.Deserialize<Settings>(settingsJson);
-                    if (settings is null)
+                    if ((Settings?)settings is null)
                         return StatusCode(StatusCodes.Status500InternalServerError, "settings are required");
                     GameIds[i] = new Game(settings, i);
                 }
@@ -60,26 +49,14 @@ public class GameGenerationController : ControllerBase
     {
         for (uint i = 0; i < GameIds.Length; ++i)
         {
-            if(GameIds[i] is null || GameIds[i]!.Socked) continue;
+            if(GameIds[i] is null) continue;
             if (DateTime.Now.Subtract(GameIds[i]!.Date).Minutes >= minutes)
             {
                 GameIds[i] = null;
             }
         }
     }
-
-    // public static bool IdIsFree(uint id)
-    // {
-    //     try
-    //     {
-    //         return (GameIds[id - StartGameId] is null);
-    //     }
-    //     catch
-    //     {
-    //         return false;
-    //     }
-    // }
-
+    
     public static Game? GetGame(int id)
     {
         try
@@ -94,10 +71,9 @@ public class GameGenerationController : ControllerBase
     
     public static void CloseGameId(uint id)
     {
-        // id -= StartGameId;
         if(id >= GameIds.Length) throw new ArgumentOutOfRangeException(nameof(id));
         
-        if (GameIds[id] is null && !GameIds[id]!.Socked)
+        if (GameIds[id] is null)
             throw new Exception("you can't close a non socked Game before timeout");
         GameIds[id] = null;
     }

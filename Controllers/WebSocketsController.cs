@@ -88,7 +88,7 @@ public class WebSocketsController : ControllerBase
 
                 await game.PlayerReconnectSend(webSocket, playerId, wsr);
             }
-            await game.AddWS(webSocket, playerId, wsr);
+            await game.AddWs(webSocket, playerId, wsr);
         }
         catch (Exception e)
         {

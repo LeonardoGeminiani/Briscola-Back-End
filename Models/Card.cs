@@ -61,7 +61,7 @@ public class Card
 
     public override bool Equals(object? obj)
     {
-        if (obj is DTOCard d)
+        if (obj is DtoCard d)
         {
             return d.Family == family && d.Number == this.value;
         }

@@ -14,9 +14,9 @@ public class Player
     public PlayerModes Mode { get; set; }
     public string Name {get; private set; }
 
-    public WebSocket? WebSocket = null;
+    public WebSocket? WebSocket;
 
-    public WebSocketReceiveResult? SocketReceiveResult = null;
+    public WebSocketReceiveResult? SocketReceiveResult;
     
     public Player(string name, PlayerModes mode)
     {
@@ -33,15 +33,15 @@ public class Player
     public byte PointsInGame = 0;
     public bool TurnBriscola = false;
     public List<Card> Cards = new();
-    readonly Stack<Card> Mazzo = new();
+    readonly Stack<Card> _mazzo = new();
 
-    public int MazzoCount() => Mazzo.Count;
+    public int MazzoCount() => _mazzo.Count;
     
-    public void PushMazzo(Card card) => Mazzo.Push(card);
+    public void PushMazzo(Card card) => _mazzo.Push(card);
     
     public byte GetMazzoPoints() {
         byte ret = 0;
-        foreach(var c in Mazzo){
+        foreach(var c in _mazzo){
             ret += c.Value;
         }
         return ret;
