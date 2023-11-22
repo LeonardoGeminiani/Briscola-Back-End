@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/Briscola-Back-End.props" />
-</Project>
