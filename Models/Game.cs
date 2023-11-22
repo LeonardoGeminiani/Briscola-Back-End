@@ -217,7 +217,6 @@ public class Game
     
     private async Task<Card> DropCardUser(int playerId)
     {
-        
         await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new { Status = "drop" }, _players[playerId]!.SocketReceiveResult!);
         
         await WebSocketsController.SendWSMessage(_players[playerId]!.WebSocket!, new
@@ -440,7 +439,7 @@ public class Game
                 }
             }
 
-            //  lascia la briscola sul tavoloù
+            //  lascia la briscola sul tavolo
             _table = new();
             Card tmp = _briscola = _mazzo.Pop();
             _table.Push((tmp, noPlayer));
@@ -739,7 +738,6 @@ public class Game
                 {
                     Console.WriteLine($"Player entered, waiting for {_usersToWait}");
                 }
-                
                 
                 return i;
             }
