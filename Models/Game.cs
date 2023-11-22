@@ -269,8 +269,13 @@ public class Game
                     // wait 1 sec and retry request
                     Console.WriteLine("dorpp");
                     await Task.Delay(1000);
-
+                    
                     if (Stopped) throw new Exception("Close");
+                    
+                    if (players[playerId]!.Mode == PlayerModes.UserDisconnected)
+                    {
+                        return DropCardBot(playerId);
+                    }
                 }
             } while (redo);
 
@@ -364,6 +369,12 @@ public class Game
                 Console.WriteLine("picked");
                 
                 if(Stopped) throw new Exception("stop");
+                
+                if (players[playerId]!.Mode == PlayerModes.UserDisconnected)
+                {
+                    PickCardBot(mazzo, cards, playerId);
+                    return;
+                }
             }
         } while (redo);
         
