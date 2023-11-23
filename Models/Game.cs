@@ -604,10 +604,6 @@ public class Game
                     {
                         if (p.Card.ValueInGame > _players[max]!.PointsInGame) max = p.Player;
                     }
-                    // for (int i = 0; i < players.Length; i++)
-                    // {
-                    //     if (players[i]!.PointsInGame > players[max]!.PointsInGame) max = i;
-                    // }
                 }
                 else
                 {
