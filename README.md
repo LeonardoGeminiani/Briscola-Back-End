@@ -37,7 +37,9 @@ In this architecture, the client is separated from the server through the use of
 
 ### Build
 
-`dotnet build`
+```sh
+dotnet build
+```
 
 ### Usage
 The ports used by the server can be viewed in `./Properties/launchSettings.json`, With different types of runtime:
