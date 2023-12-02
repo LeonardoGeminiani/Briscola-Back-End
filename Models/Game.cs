@@ -461,7 +461,7 @@ public class Game
             byte nCards = 3;
             int olpPlayerTable = 0;
             bool exit = false;
-            int max = 0;
+            
             while (!exit)
             {
                 // maziere distribuische carte a tutti
@@ -480,8 +480,9 @@ public class Game
                         }, _players[i]!.SocketReceiveResult!);
                     }
                     
-                    for (int i = max; i < _players.Length; ++i)
+                    for (int k = olpPlayerTable; k < _players.Length + olpPlayerTable; ++k)
                     {
+                        int i  = k % _players.Length;
                         if (_players[i]!.Mode == PlayerModes.User)
                             await this.PickCardsUser(_mazzo, 1, i);
                         else
@@ -504,8 +505,9 @@ public class Game
                 }
                 else if(_mazzo.Count != 0)
                 {
-                    for (int i = max; i < _players.Length; ++i)
+                    for (int k = olpPlayerTable; k < _players.Length + olpPlayerTable; ++k)
                     {
+                        int i  = k % _players.Length;
                         if (_players[i]!.Mode == PlayerModes.User)
                             await this.PickCardsUser(_mazzo, nCards, i);
                         else
@@ -596,7 +598,7 @@ public class Game
 
                     _players[card.player]!.PointsInGame = card.card.ValueInGame;
                 }
-
+                int max = 0;
                 if (withBriscola is null)
                 {
                     max = withComanda.ElementAt(0).Player;
