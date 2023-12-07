@@ -471,8 +471,9 @@ public class Game
                     _mazzo.Push(_briscola);
                     // var m = Mazzo.ToArray();
 
-                    for (int i = 0; i < _players.Length; i++)
+                    for (int k = olpPlayerTable; k < _players.Length + olpPlayerTable; ++k)
                     {
+                        int i  = k % _players.Length;
                         if(_players[i]!.Mode != PlayerModes.User) continue;
                         await WebSocketsController.SendWSMessage(_players[i]!.WebSocket!, new
                         {
